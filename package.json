@@ -1,0 +1,31 @@
+{
+  "name": "mylinks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.10.0",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "@tanstack/react-router": "^1.131.27",
+    "@tanstack/react-start": "^1.131.27",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.1.12",
+    "vite": "^7.1.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.1",
+    "typescript": "^5.9.2",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

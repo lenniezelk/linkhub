@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Remove default margin to let full-bleed backgrounds reach the viewport edges */
+html,
+body,
+#root {
+    margin: 0;
+    height: 100%;
+}
