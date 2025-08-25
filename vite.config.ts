@@ -15,4 +15,5 @@ export default defineConfig({
         viteReact(),
         tailwindcss()
     ],
+    assetsInclude: ['**/*.riv']
 })

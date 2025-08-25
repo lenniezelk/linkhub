@@ -1,6 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Logo } from '../lib/Logo'
+import { Connect } from '../lib/Connect'
+import { Share } from '../lib/Share'
+import { AllLinks } from '../lib/AllLinks'
+import { Telemetry } from '../lib/Telemetry'
+import { EasySharing } from '../lib/EasySharing'
+
 
 export const Route = createFileRoute('/')({
     component: RouteComponent,
@@ -8,6 +14,7 @@ export const Route = createFileRoute('/')({
 
 function RouteComponent() {
     const [handle, setHandle] = useState('')
+
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-rose-200 via-fuchsia-200 to-sky-200 pt-10">
             <div className="mx-auto max-w-6xl  px-4 sm:px-6 lg:px-8">
@@ -81,11 +88,9 @@ function RouteComponent() {
                     </div>
 
                     {/* Right: Rive placeholder */}
-                    <div className="relative rounded-2xl border-2 border-dashed border-white/70 bg-white/40 p-6 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                    <div className="relative border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                         <div className="aspect-[16/12] w-full">
-                            <div className="flex h-full w-full items-center justify-center text-slate-700">
-                                Rive animation placeholder
-                            </div>
+                            <Connect />
                         </div>
                     </div>
                 </section>
@@ -93,11 +98,9 @@ function RouteComponent() {
                 {/* Hero section 2 (swapped) */}
                 <section className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-center py-12">
                     {/* Left: Rive placeholder */}
-                    <div className="relative rounded-2xl border-2 border-dashed border-white/70 bg-white/40 p-6 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                    <div className="relative border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                         <div className="aspect-[16/12] w-full">
-                            <div className="flex h-full w-full items-center justify-center text-slate-700">
-                                Rive animation placeholder
-                            </div>
+                            <Share />
                         </div>
                     </div>
 
@@ -135,11 +138,9 @@ function RouteComponent() {
                     <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         {/* Feature 1 */}
                         <div className="flex flex-col items-center text-center">
-                            <div className="relative w-full rounded-2xl border-2 border-dashed border-white/70 bg-white/40 p-6 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                            <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                                 <div className="aspect-[16/12] w-full">
-                                    <div className="flex h-full w-full items-center justify-center text-slate-700">
-                                        Rive animation placeholder
-                                    </div>
+                                    <AllLinks />
                                 </div>
                             </div>
                             <h3 className="mt-4 text-lg font-semibold text-slate-900">All your links</h3>
@@ -150,26 +151,22 @@ function RouteComponent() {
 
                         {/* Feature 2 */}
                         <div className="flex flex-col items-center text-center">
-                            <div className="relative w-full rounded-2xl border-2 border-dashed border-white/70 bg-white/40 p-6 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                            <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                                 <div className="aspect-[16/12] w-full">
-                                    <div className="flex h-full w-full items-center justify-center text-slate-700">
-                                        Rive animation placeholder
-                                    </div>
+                                    <Telemetry />
                                 </div>
                             </div>
-                            <h3 className="mt-4 text-lg font-semibold text-slate-900">Beautiful layouts</h3>
+                            <h3 className="mt-4 text-lg font-semibold text-slate-900">Telemetry & graphs</h3>
                             <p className="mt-1 text-sm text-slate-700 max-w-sm">
-                                Clean, modern designs that look great everywhere.
+                                Track clicks and engagement with real‑time charts and insights.
                             </p>
                         </div>
 
                         {/* Feature 3 */}
                         <div className="flex flex-col items-center text-center">
-                            <div className="relative w-full rounded-2xl border-2 border-dashed border-white/70 bg-white/40 p-6 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                            <div className="relative w-full rounded-2xl border-dashed border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                                 <div className="aspect-[16/12] w-full">
-                                    <div className="flex h-full w-full items-center justify-center text-slate-700">
-                                        Rive animation placeholder
-                                    </div>
+                                    <EasySharing />
                                 </div>
                             </div>
                             <h3 className="mt-4 text-lg font-semibold text-slate-900">Easy sharing</h3>
