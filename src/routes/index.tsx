@@ -6,6 +6,7 @@ import { Share } from '../lib/Share'
 import { AllLinks } from '../lib/AllLinks'
 import { Telemetry } from '../lib/Telemetry'
 import { EasySharing } from '../lib/EasySharing'
+import { Testimonials } from '../lib/Testimonials'
 
 
 export const Route = createFileRoute('/')({
@@ -164,7 +165,7 @@ function RouteComponent() {
 
                         {/* Feature 3 */}
                         <div className="flex flex-col items-center text-center">
-                            <div className="relative w-full rounded-2xl border-dashed border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                            <div className="relative w-full rounded-2xl border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                                 <div className="aspect-[16/12] w-full">
                                     <EasySharing />
                                 </div>
@@ -181,17 +182,14 @@ function RouteComponent() {
                 <section className="mt-24 pb-24">
                     <div className="text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                            What our clients say
+                            Loved by creators worldwide
                         </h2>
-                        <p className="mt-2 text-base text-slate-700">Real stories, real results.</p>
                     </div>
 
                     <div className="mt-10">
-                        <div className="relative w-full rounded-3xl border-2 border-dashed border-white/70 bg-white/50 p-6 md:p-10 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                        <div className="relative w-full rounded-2xl border-white/70 bg-white/50 shadow-sm ring-1 ring-white/50 backdrop-blur">
                             <div className="aspect-[16/9] w-full">
-                                <div className="flex h-full w-full items-center justify-center text-slate-700 text-center">
-                                    Client testimonials Rive animation placeholder
-                                </div>
+                                <Testimonials />
                             </div>
                         </div>
                     </div>
@@ -203,7 +201,7 @@ function RouteComponent() {
                         <div className="flex items-center gap-3">
                             <Logo className="h-7 w-7" />
                             <span className="text-base font-semibold text-slate-900">LinkHub</span>
-                            <span className="text-sm text-slate-700">© 2025 LinkHub</span>
+                            <span className="text-sm text-slate-700">© {new Date().getFullYear()} LinkHub</span>
                         </div>
                         <nav className="flex items-center gap-4">
                             <a href="#" className="text-sm font-medium text-slate-800 hover:text-slate-950">Pricing</a>
