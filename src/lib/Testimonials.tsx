@@ -1,6 +1,7 @@
 import { useRive, useViewModel, useViewModelInstance, useViewModelInstanceEnum, useViewModelInstanceImage, useViewModelInstanceString, decodeImage, useViewModelInstanceBoolean } from '@rive-app/react-canvas'
 import LinkHubRiveFile from '../assets/linkhub.riv'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FetchState } from './types';
 
 interface Testimonial {
     name: string;
@@ -8,15 +9,14 @@ interface Testimonial {
     image: string;
 }
 
-interface TestimonialsArray {
+interface TestimonialsData {
     testimonials: Testimonial[];
 }
 
-type TestimonialsAnimationState = 'IDLE' | 'LOADING' | 'TESTIMONIALS' | 'ERROR';
+// type TestimonialsAnimationState = 'IDLE' | 'LOADING' | 'TESTIMONIALS' | 'ERROR';
 
-type TestimonialsDataLoadingState = 'IDLE' | 'FETCHING' | 'LOADED' | 'ERROR';
 
-const TestimonialsArray: TestimonialsArray = {
+const TestimonialsData: TestimonialsData = {
     testimonials: [
         {
             name: 'Lena Quill',
@@ -53,9 +53,9 @@ const TestimonialsArray: TestimonialsArray = {
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-const loadData = async (): Promise<TestimonialsArray> => {
+const loadData = async (): Promise<TestimonialsData> => {
     await wait(500) // Simulate loading
-    return TestimonialsArray
+    return TestimonialsData
 }
 
 const getTestimonialImage = async (data: Testimonial) => {
@@ -64,8 +64,8 @@ const getTestimonialImage = async (data: Testimonial) => {
     return await decodeImage(new Uint8Array(buffer));
 }
 
-const getAllTestimonialImages = (data: TestimonialsArray) => {
-    return Promise.all(data.testimonials.map(getTestimonialImage))
+const getAllTestimonialImages = (data: Testimonial[]) => {
+    return Promise.all(data.map(getTestimonialImage))
 }
 
 export function Testimonials() {
@@ -77,7 +77,10 @@ export function Testimonials() {
         autoplay: true,
         stateMachines: 'State Machine 1'
     })
-    const [testimonialsDataLoadingState, setTestimonialsDataLoadingState] = useState<TestimonialsDataLoadingState>('IDLE')
+    const [testimonialsDataFetchState, setTestimonialsDataFetchState] = useState<FetchState>('IDLE')
+    const [testimonialDataIndices, setTestimonialDataIndices] = useState<[number, number]>([0, 2])
+    const [testimonialsData, setTestimonialsData] = useState<Testimonial[]>([])
+    const [componentIsVisible, setComponentIsVisible] = useState(false)
 
     const viewModel = useViewModel(rive, { name: 'Testimonials' })
     const viewModelInstance = useViewModelInstance(viewModel, { rive })
@@ -101,31 +104,14 @@ export function Testimonials() {
         const observer = new IntersectionObserver(
             (entries) => {
                 const entry = entries[0]
-                const isVisible = !!entry?.isIntersecting
-                if (isVisible) {
-                    switch (testimonialsDataLoadingState) {
-                        case 'LOADED':
-                            setTestimonialsAnimationState('TESTIMONIALS')
-                            break;
-                        case 'FETCHING':
-                            setTestimonialsAnimationState('LOADING')
-                            break;
-                        case 'ERROR':
-                            setTestimonialsAnimationState('ERROR')
-                            break;
-                        default:
-                            setTestimonialsAnimationState('IDLE')
-                    }
-                } else {
-                    setTestimonialsAnimationState('IDLE')
-                }
+                setComponentIsVisible(!!entry?.isIntersecting)
             },
             { threshold: 0.2 }
         )
 
         observer.observe(containerRef.current)
         return () => observer.disconnect()
-    }, [viewModelInstance, setTestimonialsAnimationState, testimonialsDataLoadingState])
+    }, [viewModelInstance, setComponentIsVisible])
 
     const setTestimonialItemsVisibility = useCallback((visible: boolean) => {
         setTestimonial1Visible(visible)
@@ -133,39 +119,119 @@ export function Testimonials() {
         setTestimonial3Visible(visible)
     }, [setTestimonial1Visible, setTestimonial2Visible, setTestimonial3Visible])
 
-    const setTestimonialsData = useCallback(async (data: TestimonialsArray) => {
-        setTestimonial1Name(data.testimonials[0].name)
-        setTestimonial1Link(data.testimonials[0].link)
-        setTestimonial2Name(data.testimonials[1].name)
-        setTestimonial2Link(data.testimonials[1].link)
-        setTestimonial3Name(data.testimonials[2].name)
-        setTestimonial3Link(data.testimonials[2].link)
+    const dataIndices = useMemo(() => {
+        const dataIndices: number[] = []
+        for (let i = testimonialDataIndices[0]; i <= testimonialDataIndices[1]; i++) {
+            dataIndices.push(i)
+        }
+        return dataIndices
+    }, [testimonialDataIndices])
+
+    const canShowAnimationItem = useCallback((index: number) => {
+        return dataIndices[index] != undefined && testimonialsData[dataIndices[index]] != undefined
+    }, [dataIndices, testimonialsData])
+
+    const setTestimonialsAnimationData = useCallback(async (data: Testimonial[]) => {
+        if (canShowAnimationItem(0)) {
+            setTestimonial1Name(data[dataIndices[0]].name)
+            setTestimonial1Link(data[dataIndices[0]].link)
+        }
+        if (canShowAnimationItem(1)) {
+            setTestimonial2Name(data[dataIndices[1]].name)
+            setTestimonial2Link(data[dataIndices[1]].link)
+        }
+        if (canShowAnimationItem(2)) {
+            setTestimonial3Name(data[dataIndices[2]].name)
+            setTestimonial3Link(data[dataIndices[2]].link)
+        }
+
         const [decodedImage1, decodedImage2, decodedImage3] = await getAllTestimonialImages(data)
-        setTestimonial1Image(decodedImage1)
-        setTestimonial2Image(decodedImage2)
-        setTestimonial3Image(decodedImage3)
-        decodedImage1.unref()
-        decodedImage2.unref()
-        decodedImage3.unref()
-    }, [setTestimonial1Name, setTestimonial1Link, setTestimonial1Image, setTestimonial2Name, setTestimonial2Link, setTestimonial2Image, setTestimonial3Name, setTestimonial3Link, setTestimonial3Image])
+        if (decodedImage1) {
+            setTestimonial1Image(decodedImage1)
+            decodedImage1.unref()
+        }
+        if (decodedImage2) {
+            setTestimonial2Image(decodedImage2)
+            decodedImage2.unref()
+        }
+        if (decodedImage3) {
+            setTestimonial3Image(decodedImage3)
+            decodedImage3.unref()
+        }
+    }, [
+        setTestimonial1Name,
+        setTestimonial1Link,
+        setTestimonial1Image,
+        setTestimonial2Name,
+        setTestimonial2Link,
+        setTestimonial2Image,
+        setTestimonial3Name,
+        setTestimonial3Link,
+        setTestimonial3Image,
+        canShowAnimationItem,
+        dataIndices
+    ])
+
+    useEffect(() => {
+        const setAnimationState = async () => {
+            if (!componentIsVisible) {
+                setTestimonialsAnimationState('IDLE')
+                return
+            }
+
+            switch (testimonialsDataFetchState) {
+                case 'FETCHING':
+                    setTestimonialsAnimationState('LOADING')
+                    break;
+                case 'SUCCESS':
+                    setTestimonialItemsVisibility(false)
+                    try {
+                        setTestimonialsAnimationState('TESTIMONIALS')
+                        setTestimonialItemsVisibility(true)
+                    } catch (error) {
+                        console.error('Failed to set testimonials animation data: ', error)
+                        setTestimonialsAnimationState('ERROR')
+                    }
+                    break;
+                case 'ERROR':
+                    setTestimonialsAnimationState('ERROR')
+                    break;
+                default:
+                    setTestimonialsAnimationState('IDLE');
+                    break;
+            }
+        }
+
+        setAnimationState()
+    }, [
+        testimonialsDataFetchState,
+        setTestimonialItemsVisibility,
+        setTestimonialsAnimationData,
+        componentIsVisible,
+        setTestimonialsAnimationState
+    ])
 
     useEffect(() => {
         const loadTestimonials = async () => {
-            setTestimonialItemsVisibility(false)
-            setTestimonialsDataLoadingState('FETCHING')
+            setTestimonialsDataFetchState('FETCHING')
             try {
-                const testimonialsData = await loadData()
-                await setTestimonialsData(testimonialsData)
-                setTestimonialsDataLoadingState('LOADED')
-                setTestimonialItemsVisibility(true)
+                const data = await loadData()
+                await setTestimonialsAnimationData(data.testimonials)
+                setTestimonialsData(data.testimonials)
+                setTestimonialsDataFetchState('SUCCESS')
             } catch (error) {
-                console.error('Failed to load testimonials: ', error)
-                setTestimonialsDataLoadingState('ERROR')
+                setTestimonialsData([])
+                setTestimonialsDataFetchState('ERROR')
+                console.error('Failed to fetch testimonial data: ', error)
             }
         }
 
         loadTestimonials()
-    }, [setTestimonialsDataLoadingState, setTestimonialItemsVisibility, setTestimonialsData])
+    }, [
+        setTestimonialsDataFetchState,
+        setTestimonialsData,
+        setTestimonialsAnimationData
+    ])
 
     return (
         <div ref={containerRef} className='w-full h-full'>
