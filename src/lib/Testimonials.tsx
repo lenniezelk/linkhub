@@ -6,7 +6,8 @@ import { FetchState } from './types';
 interface Testimonial {
     name: string;
     link: string;
-    image: string;
+    imageUrl: string;
+    decodedImageData?: Awaited<ReturnType<typeof decodeImage>>;
 }
 
 interface TestimonialsData {
@@ -21,32 +22,32 @@ const TestimonialsData: TestimonialsData = {
         {
             name: 'Lena Quill',
             link: 'linkhub.link/lena',
-            image: '/testimonials/lena.png'
+            imageUrl: '/testimonials/lena.png'
         },
         {
             name: 'Asha Ndlovu',
             link: 'linkhub.link/asha',
-            image: '/testimonials/asha.png'
+            imageUrl: '/testimonials/asha.png'
         },
         {
             name: 'Sora Kim',
             link: 'linkhub.link/sora',
-            image: '/testimonials/sora.png'
+            imageUrl: '/testimonials/sora.png'
         },
         {
             name: 'Vera Singh',
             link: 'linkhub.link/vera',
-            image: '/testimonials/vera.png'
+            imageUrl: '/testimonials/vera.png'
         },
         {
             name: 'Zeno Alvarez',
             link: 'linkhub.link/zeno',
-            image: '/testimonials/zeno.png'
+            imageUrl: '/testimonials/zeno.png'
         },
         {
             name: 'Mira Patel',
             link: 'linkhub.link/mira',
-            image: '/testimonials/patel.png'
+            imageUrl: '/testimonials/patel.png'
         }
     ]
 }
@@ -59,7 +60,7 @@ const loadData = async (): Promise<TestimonialsData> => {
 }
 
 const getTestimonialImage = async (data: Testimonial) => {
-    const response = await fetch(data.image);
+    const response = await fetch(data.imageUrl);
     const buffer = await response.arrayBuffer();
     return await decodeImage(new Uint8Array(buffer));
 }
@@ -119,6 +120,14 @@ export function Testimonials() {
         setTestimonial3Visible(visible)
     }, [setTestimonial1Visible, setTestimonial2Visible, setTestimonial3Visible])
 
+    const staggerTestimonialItemVisibility = useCallback(async (visible: boolean) => {
+        setTestimonial1Visible(visible)
+        await wait(100)
+        setTestimonial2Visible(visible)
+        await wait(100)
+        setTestimonial3Visible(visible)
+    }, [setTestimonial1Visible, setTestimonial2Visible, setTestimonial3Visible])
+
     const dataIndices = useMemo(() => {
         const dataIndices: number[] = []
         for (let i = testimonialDataIndices[0]; i <= testimonialDataIndices[1]; i++) {
@@ -135,28 +144,17 @@ export function Testimonials() {
         if (canShowAnimationItem(0)) {
             setTestimonial1Name(data[dataIndices[0]].name)
             setTestimonial1Link(data[dataIndices[0]].link)
+            setTestimonial1Image(data[dataIndices[0]].decodedImageData || null)
         }
         if (canShowAnimationItem(1)) {
             setTestimonial2Name(data[dataIndices[1]].name)
             setTestimonial2Link(data[dataIndices[1]].link)
+            setTestimonial2Image(data[dataIndices[1]].decodedImageData || null)
         }
         if (canShowAnimationItem(2)) {
             setTestimonial3Name(data[dataIndices[2]].name)
             setTestimonial3Link(data[dataIndices[2]].link)
-        }
-
-        const [decodedImage1, decodedImage2, decodedImage3] = await getAllTestimonialImages(data)
-        if (decodedImage1) {
-            setTestimonial1Image(decodedImage1)
-            decodedImage1.unref()
-        }
-        if (decodedImage2) {
-            setTestimonial2Image(decodedImage2)
-            decodedImage2.unref()
-        }
-        if (decodedImage3) {
-            setTestimonial3Image(decodedImage3)
-            decodedImage3.unref()
+            setTestimonial3Image(data[dataIndices[2]].decodedImageData || null)
         }
     }, [
         setTestimonial1Name,
@@ -172,6 +170,7 @@ export function Testimonials() {
         dataIndices
     ])
 
+    // set animation state
     useEffect(() => {
         const setAnimationState = async () => {
             if (!componentIsVisible) {
@@ -211,11 +210,25 @@ export function Testimonials() {
         setTestimonialsAnimationState
     ])
 
+    // fetch testimonials data
     useEffect(() => {
         const loadTestimonials = async () => {
+            console.log('Loading testimonials...');
             setTestimonialsDataFetchState('FETCHING')
             try {
                 const data = await loadData()
+
+                // Only decode images if they haven't been decoded yet
+                const needsDecoding = data.testimonials.some(t => !t.decodedImageData)
+                if (needsDecoding) {
+                    const decodedImages = await getAllTestimonialImages(data.testimonials)
+                    data.testimonials.forEach((testimonial, index) => {
+                        if (!testimonial.decodedImageData) {
+                            testimonial.decodedImageData = decodedImages[index]
+                        }
+                    })
+                }
+
                 await setTestimonialsAnimationData(data.testimonials)
                 setTestimonialsData(data.testimonials)
                 setTestimonialsDataFetchState('SUCCESS')
@@ -226,12 +239,52 @@ export function Testimonials() {
             }
         }
 
-        loadTestimonials()
+        // Only load if we don't have data yet
+        if (testimonialsData.length === 0 && testimonialsDataFetchState === 'IDLE') {
+            loadTestimonials()
+        }
     }, [
-        setTestimonialsDataFetchState,
-        setTestimonialsData,
-        setTestimonialsAnimationData
+        setTestimonialsAnimationData,
+        testimonialsData.length,
+        testimonialsDataFetchState
     ])
+
+    useEffect(() => {
+        console.log('testimonialsData.length', testimonialsData.length)
+        if (testimonialsData.length < 4) return
+
+        let handle: NodeJS.Timeout | null = setInterval(() => {
+            console.log('Rotating testimonials...')
+            setTestimonialDataIndices(([start, _]) => {
+                // Move to next set of 3 items, or wrap around to start
+                const nextStart = start + 3
+                const nextEnd = nextStart + 2
+
+                if (nextEnd < testimonialsData.length) {
+                    return [nextStart, nextEnd]
+                } else {
+                    return [0, 2] // Reset to show first 3 items
+                }
+            })
+        }, 3000)
+
+        if (handle && !componentIsVisible) {
+            clearInterval(handle)
+            handle = null
+        }
+
+        return () => {
+            if (handle) clearInterval(handle)
+        }
+    }, [testimonialsData.length, componentIsVisible])
+
+    useEffect(() => {
+        if (testimonialsData.length === 0) return
+
+        staggerTestimonialItemVisibility(false)
+        setTestimonialsAnimationData(testimonialsData)
+        staggerTestimonialItemVisibility(true)
+    }, [testimonialDataIndices, testimonialsData, setTestimonialsAnimationData, setTestimonialItemsVisibility])
 
     return (
         <div ref={containerRef} className='w-full h-full'>
