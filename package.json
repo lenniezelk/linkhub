@@ -8,7 +8,9 @@
     "dev": "vite dev",
     "build": "vite build",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types --env-interface Env"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +22,8 @@
     "@tanstack/react-router": "^1.131.44",
     "@tanstack/react-start": "^1.131.44",
     "@tanstack/zod-adapter": "^1.131.44",
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.13",
@@ -27,14 +31,18 @@
     "zod": "^4.1.9"
   },
   "devDependencies": {
+    "@types/node": "^24.5.1",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/parser": "^8.43.0",
     "@vitejs/plugin-react": "^5.0.2",
+    "drizzle-kit": "^0.31.4",
     "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.4.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "wrangler": "^4.37.1"
   }
 }

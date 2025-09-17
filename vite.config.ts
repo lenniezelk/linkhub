@@ -11,9 +11,12 @@ export default defineConfig({
     },
     plugins: [
         tsConfigPaths(),
-        tanstackStart({ customViteReactPlugin: true }),
+        tanstackStart({
+            customViteReactPlugin: true,
+            target: "cloudflare-module", // Key configuration for Cloudflare compatibility
+        }),
         viteReact(),
-        tailwindcss()
+        tailwindcss(),
     ],
     assetsInclude: ['**/*.riv']
 })

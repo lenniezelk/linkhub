@@ -48,3 +48,6 @@ Thumbs.db
 
 # Optional: TanStack Router generated tree (safe to ignore if not tracked)
 src/routeTree.gen.ts
+
+.nitro/*
+.output/*

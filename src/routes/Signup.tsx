@@ -12,7 +12,7 @@ import { zodValidator } from '@tanstack/zod-adapter'
 import { useEffect } from 'react';
 
 const signupSearchSchema = z.object({
-    handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/).optional(),
+    handle: z.string().optional(),
 });
 
 export const Route = createFileRoute('/Signup')({
