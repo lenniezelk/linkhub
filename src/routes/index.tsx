@@ -1,16 +1,24 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Logo } from '../lib/Logo'
-import { Connect } from '../lib/Connect'
-import { Share } from '../lib/Share'
-import { AllLinks } from '../lib/AllLinks'
-import { Telemetry } from '../lib/Telemetry'
-import { EasySharing } from '../lib/EasySharing'
-import { Testimonials } from '../lib/Testimonials'
-import Container from '../lib/Container'
+import { Logo } from '../components/Logo'
+import { Connect } from '../components/Connect'
+import { Share } from '../components/Share'
+import { AllLinks } from '../components/AllLinks'
+import { Telemetry } from '../components/Telemetry'
+import { EasySharing } from '../components/EasySharing'
+import { Testimonials } from '../components/Testimonials'
+import Container from '../components/Container'
+import Menu from '../components/Menu'
 
 
 export const Route = createFileRoute('/')({
+    head: () => ({
+        meta: [
+            {
+                title: 'LinkHub | Home',
+            },
+        ],
+    }),
     component: RouteComponent,
 })
 
@@ -20,29 +28,7 @@ function RouteComponent() {
     return (
         <Container>
             {/* Top navigation */}
-            <nav className="flex items-center justify-between py-3">
-                {/* Logo (left) */}
-                <Link to="/" className="flex items-center gap-2">
-                    <Logo className="h-8 w-8" />
-                    <span className="text-lg font-semibold text-slate-900">LinkHub</span>
-                </Link>
-
-                {/* Menu (right) */}
-                <div className="flex items-center gap-4">
-                    <a href="#" className="text-lg font-medium text-slate-800 hover:text-slate-950">
-                        Pricing
-                    </a>
-                    <a href="#" className="text-lg font-medium text-slate-800 hover:text-slate-950">
-                        Login
-                    </a>
-                    <a
-                        href="#"
-                        className="inline-flex items-center rounded-full bg-slate-900 px-4 py-1.5 text-base font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400"
-                    >
-                        Sign Up
-                    </a>
-                </div>
-            </nav>
+            <Menu />
 
             {/* Hero section 1 */}
             <section className="mt-12 grid min-h-[calc(100vh-6rem)] grid-cols-1 content-center gap-8 md:grid-cols-2 md:items-center">
@@ -78,12 +64,13 @@ function RouteComponent() {
                                     linkhub.link/
                                 </span>
                             </div>
-                            <button
-                                type="submit"
-                                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 cursor-pointer"
+                            <Link
+                                to={`/signup`}
+                                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+                                search={{ handle }}
                             >
                                 Claim your URL
-                            </button>
+                            </Link>
                         </div>
                     </form>
                 </div>

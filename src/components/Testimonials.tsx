@@ -1,7 +1,8 @@
 import { useRive, useViewModel, useViewModelInstance, useViewModelInstanceEnum, useViewModelInstanceImage, useViewModelInstanceString, decodeImage, useViewModelInstanceBoolean, useViewModelInstanceList, useViewModelInstanceNumber, useViewModelInstanceTrigger } from '@rive-app/react-canvas'
 import LinkHubRiveFile from '../assets/linkhub.riv'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { FetchState } from './types';
+import { FetchState } from '../lib/types';
+import { wait } from '../lib/utils';
 
 interface Testimonial {
     name: string;
@@ -51,8 +52,6 @@ const TestimonialsData: TestimonialsData = {
         }
     ]
 }
-
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const loadData = async (): Promise<TestimonialsData> => {
     await wait(500) // Simulate loading
