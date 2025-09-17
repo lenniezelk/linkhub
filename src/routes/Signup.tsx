@@ -1,15 +1,18 @@
-import { createFileRoute, useSearch } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import Container from '../components/Container'
 import Menu from '../components/Menu'
 import * as React from 'react';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { validateEmail, validateHandle, validatePassword } from '../lib/validation';
-import { wait } from '../lib/utils';
 import { useCallback } from 'react';
 import { z } from 'zod';
 import { zodValidator } from '@tanstack/zod-adapter'
 import { useEffect } from 'react';
+import { createServerFn } from '@tanstack/react-start'
+import { insertUser } from '../lib/db/db';
+import { Result } from '../lib/types';
+import toast from 'react-hot-toast';
 
 const signupSearchSchema = z.object({
     handle: z.string().optional(),
@@ -27,21 +30,31 @@ export const Route = createFileRoute('/Signup')({
     validateSearch: zodValidator(signupSearchSchema)
 })
 
-interface SignupForm {
-    handle: string;
+const SignupFormData = z.object({
+    handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
+    email: z.email(),
+    password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]/),
+    name: z.string().min(3).max(100),
+});
+
+export type SignupData = z.infer<typeof SignupFormData>;
+
+type SignupForm = SignupData & {
     handleError?: string;
-    email: string;
     emailError?: string;
-    password: string;
     passwordError?: string;
     confirmPassword: string;
     confirmPasswordError?: string;
+    nameError?: string;
 }
+
+
 
 type SignupFormReducerActions =
     | { type: 'SET_VALUES'; payload: Partial<SignupForm> }
 
 const initialState: SignupForm = {
+    name: '',
     handle: '',
     handleError: '',
     email: '',
@@ -50,6 +63,7 @@ const initialState: SignupForm = {
     passwordError: '',
     confirmPassword: '',
     confirmPasswordError: '',
+    nameError: '',
 }
 
 const reducer = (state: SignupForm, action: SignupFormReducerActions): SignupForm => {
@@ -87,10 +101,24 @@ const isHandleValid = (handle: string) => {
     return ''
 }
 
+const isNameValid = (name: string) => {
+    if (isEmpty(name)) return 'Name is required'
+    if (name.length < 3 || name.length > 100) return 'Name must be between 3 and 100 characters long'
+    return ''
+}
+
+const signUp = createServerFn({ method: 'POST' }).validator(
+    (data: z.infer<typeof SignupFormData>) => SignupFormData.parse(data)
+).handler(async (ctx): Promise<Result> => {
+    await insertUser(ctx.data);
+    return { status: 'SUCCESS' }
+})
+
 function RouteComponent() {
     const [state, dispatch] = React.useReducer(reducer, initialState)
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const { handle: initialHandle } = Route.useSearch()
+    const navigate = useNavigate()
 
     useEffect(() => {
         if (initialHandle) {
@@ -104,21 +132,35 @@ function RouteComponent() {
         const emailError = isEmailValid(state.email)
         const passwordError = isPasswordValid(state.password)
         const confirmPasswordError = isConfirmPasswordValid(state.password, state.confirmPassword)
+        const nameError = isNameValid(state.name)
 
-        if (handleError || emailError || passwordError || confirmPasswordError) {
+        if (handleError || emailError || passwordError || confirmPasswordError || nameError) {
             dispatch({
                 type: 'SET_VALUES',
-                payload: { handleError, emailError, passwordError, confirmPasswordError }
+                payload: { handleError, emailError, passwordError, confirmPasswordError, nameError }
             })
             return
         }
 
         setIsSubmitting(true)
 
-        wait(1000).then(() => {
-            setIsSubmitting(false)
-            alert('Account created successfully!')
-        })
+        signUp({
+            handle: state.handle,
+            email: state.email,
+            password: state.password,
+            name: state.name
+        }).then((result) => {
+            if (result.status === 'SUCCESS') {
+                toast.success('Account created successfully! You can now log in.');
+                navigate('/login');
+            } else {
+                toast.error(result.error || 'An error occurred during signup. Please try again.');
+            }
+        }).catch((error) => {
+            toast.error('An unexpected error occurred. Please try again later.');
+        }).finally(() => {
+            setIsSubmitting(false);
+        });
     }, [state, dispatch])
 
 
@@ -147,6 +189,17 @@ function RouteComponent() {
                         >
                             linkhub.link/
                         </span>
+                    </div>
+                    <div className="relative w-full max-w-md mt-2">
+                        <Input
+                            id="name"
+                            type="text"
+                            inputMode="text"
+                            placeholder="Your Name"
+                            value={state.name}
+                            onChange={(e) => dispatch({ type: 'SET_VALUES', payload: { name: e.target.value, nameError: isNameValid(e.target.value) } })}
+                            error={state.nameError}
+                        />
                     </div>
                     <div className="relative w-full max-w-md mt-2">
                         <Input

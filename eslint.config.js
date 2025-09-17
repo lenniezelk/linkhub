@@ -7,7 +7,27 @@ import reactHooks from "eslint-plugin-react-hooks";
 export default [
     {
         ignores: [
-            "**/routeTree.gen.ts"
+            // Generated files
+            "**/routeTree.gen.ts",
+            "**/worker-configuration.d.ts",
+            // Build/dist folders
+            "**/dist/**",
+            "**/build/**",
+            "**/.wrangler/**",
+            "**/.nitro/**",
+            "**/.output/**",
+            // Cache/temp folders
+            "**/.tanstack/**",
+            "**/node_modules/**",
+            "**/.vite/**",
+            "**/.turbo/**",
+            "**/.next/**",
+            // Config/tooling
+            "**/coverage/**",
+            "**/public/**",
+            "**/.env*",
+            "**/wrangler.toml",
+            "**/drizzle/**"
         ]
     },
     {

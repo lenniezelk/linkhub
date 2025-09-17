@@ -8,6 +8,7 @@ import {
     Scripts,
 } from '@tanstack/react-router'
 import '../styles.css'
+import { Toaster } from 'react-hot-toast'
 
 export const Route = createRootRoute({
     head: () => ({
@@ -42,6 +43,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
                 <HeadContent />
             </head>
             <body>
+                <Toaster />
                 {children}
                 <Scripts />
             </body>

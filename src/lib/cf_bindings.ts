@@ -1,4 +1,4 @@
-let cachedEnv: Env | null = null;
+let cachedEnv: Env | null = null
 
 // This gets called once at startup when running locally
 const initDevEnv = async () => {

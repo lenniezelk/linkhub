@@ -14,9 +14,10 @@
 	},
 	"d1_databases": [
 		{
-			"binding": "linkhub_prod",
+			"binding": "DB",
 			"database_name": "linkhub-prod",
-			"database_id": "f5ade111-b5ab-42c6-8d14-df3394449faa"
+			"database_id": "f5ade111-b5ab-42c6-8d14-df3394449faa",
+			"migrations_dir": "drizzle"
 		}
 	]
 }
