@@ -1,4 +1,4 @@
-import { useRive, useViewModel, useViewModelInstance, useViewModelInstanceEnum, useViewModelInstanceImage, useViewModelInstanceString, decodeImage, useViewModelInstanceBoolean } from '@rive-app/react-canvas'
+import { useRive, useViewModel, useViewModelInstance, useViewModelInstanceEnum, useViewModelInstanceImage, useViewModelInstanceString, decodeImage, useViewModelInstanceBoolean, useViewModelInstanceList, useViewModelInstanceNumber, useViewModelInstanceTrigger } from '@rive-app/react-canvas'
 import LinkHubRiveFile from '../assets/linkhub.riv'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FetchState } from './types';
@@ -69,6 +69,8 @@ const getAllTestimonialImages = (data: Testimonial[]) => {
     return Promise.all(data.map(getTestimonialImage))
 }
 
+const SCROLL_DELAY = 3000 // 3 seconds
+
 export function Testimonials() {
     const containerRef = useRef<HTMLDivElement | null>(null)
     const { rive, RiveComponent } = useRive({
@@ -79,25 +81,25 @@ export function Testimonials() {
         stateMachines: 'State Machine 1'
     })
     const [testimonialsDataFetchState, setTestimonialsDataFetchState] = useState<FetchState>('IDLE')
-    const [testimonialDataIndices, setTestimonialDataIndices] = useState<[number, number]>([0, 2])
     const [testimonialsData, setTestimonialsData] = useState<Testimonial[]>([])
     const [componentIsVisible, setComponentIsVisible] = useState(false)
 
     const viewModel = useViewModel(rive, { name: 'Testimonials' })
     const viewModelInstance = useViewModelInstance(viewModel, { rive })
     const { setValue: setTestimonialsAnimationState } = useViewModelInstanceEnum('state', viewModelInstance)
-    const { setValue: setTestimonial1Name } = useViewModelInstanceString('testimonial-1/name', viewModelInstance)
-    const { setValue: setTestimonial1Link } = useViewModelInstanceString('testimonial-1/link', viewModelInstance)
-    const { setValue: setTestimonial1Image } = useViewModelInstanceImage('testimonial-1/image', viewModelInstance)
-    const { setValue: setTestimonial1Visible } = useViewModelInstanceBoolean('testimonial-1/visible', viewModelInstance)
-    const { setValue: setTestimonial2Name } = useViewModelInstanceString('testimonial-2/name', viewModelInstance)
-    const { setValue: setTestimonial2Link } = useViewModelInstanceString('testimonial-2/link', viewModelInstance)
-    const { setValue: setTestimonial2Image } = useViewModelInstanceImage('testimonial-2/image', viewModelInstance)
-    const { setValue: setTestimonial2Visible } = useViewModelInstanceBoolean('testimonial-2/visible', viewModelInstance)
-    const { setValue: setTestimonial3Name } = useViewModelInstanceString('testimonial-3/name', viewModelInstance)
-    const { setValue: setTestimonial3Link } = useViewModelInstanceString('testimonial-3/link', viewModelInstance)
-    const { setValue: setTestimonial3Image } = useViewModelInstanceImage('testimonial-3/image', viewModelInstance)
-    const { setValue: setTestimonial3Visible } = useViewModelInstanceBoolean('testimonial-3/visible', viewModelInstance)
+    const listItemVM = useViewModel(rive, { name: 'Testimonial' })
+    const { addInstance } = useViewModelInstanceList("list", viewModelInstance)
+    const { value: scrollIndexValue, setValue: setScrollIndexValue } = useViewModelInstanceNumber("scroll index", viewModelInstance)
+    const [isScrolling, setIsScrolling] = useState(true)
+    useViewModelInstanceTrigger(
+        "clicked",
+        viewModelInstance,
+        {
+            onTrigger: () => {
+                setIsScrolling(false)
+            }
+        }
+    )
 
     useEffect(() => {
         if (!viewModelInstance || !containerRef.current) return
@@ -114,61 +116,28 @@ export function Testimonials() {
         return () => observer.disconnect()
     }, [viewModelInstance, setComponentIsVisible])
 
-    const setTestimonialItemsVisibility = useCallback((visible: boolean) => {
-        setTestimonial1Visible(visible)
-        setTestimonial2Visible(visible)
-        setTestimonial3Visible(visible)
-    }, [setTestimonial1Visible, setTestimonial2Visible, setTestimonial3Visible])
 
-    const staggerTestimonialItemVisibility = useCallback(async (visible: boolean) => {
-        setTestimonial1Visible(visible)
-        await wait(100)
-        setTestimonial2Visible(visible)
-        await wait(100)
-        setTestimonial3Visible(visible)
-    }, [setTestimonial1Visible, setTestimonial2Visible, setTestimonial3Visible])
+    useEffect(() => {
+        if (!listItemVM || testimonialsData.length === 0) return
 
-    const dataIndices = useMemo(() => {
-        const dataIndices: number[] = []
-        for (let i = testimonialDataIndices[0]; i <= testimonialDataIndices[1]; i++) {
-            dataIndices.push(i)
-        }
-        return dataIndices
-    }, [testimonialDataIndices])
+        testimonialsData.forEach((testimonial) => {
+            const listItemVMInstance = listItemVM.instance()
 
-    const canShowAnimationItem = useCallback((index: number) => {
-        return dataIndices[index] != undefined && testimonialsData[dataIndices[index]] != undefined
-    }, [dataIndices, testimonialsData])
+            if (!listItemVMInstance) return
 
-    const setTestimonialsAnimationData = useCallback(async (data: Testimonial[]) => {
-        if (canShowAnimationItem(0)) {
-            setTestimonial1Name(data[dataIndices[0]].name)
-            setTestimonial1Link(data[dataIndices[0]].link)
-            setTestimonial1Image(data[dataIndices[0]].decodedImageData || null)
-        }
-        if (canShowAnimationItem(1)) {
-            setTestimonial2Name(data[dataIndices[1]].name)
-            setTestimonial2Link(data[dataIndices[1]].link)
-            setTestimonial2Image(data[dataIndices[1]].decodedImageData || null)
-        }
-        if (canShowAnimationItem(2)) {
-            setTestimonial3Name(data[dataIndices[2]].name)
-            setTestimonial3Link(data[dataIndices[2]].link)
-            setTestimonial3Image(data[dataIndices[2]].decodedImageData || null)
-        }
-    }, [
-        setTestimonial1Name,
-        setTestimonial1Link,
-        setTestimonial1Image,
-        setTestimonial2Name,
-        setTestimonial2Link,
-        setTestimonial2Image,
-        setTestimonial3Name,
-        setTestimonial3Link,
-        setTestimonial3Image,
-        canShowAnimationItem,
-        dataIndices
-    ])
+            const nameProp = listItemVMInstance.string("name")
+            const linkProp = listItemVMInstance.string("link")
+            const profileImageProp = listItemVMInstance.image("profile")
+
+            if (!nameProp || !linkProp || !profileImageProp) return
+
+            nameProp.value = testimonial.name
+            linkProp.value = testimonial.link
+            profileImageProp.value = testimonial.decodedImageData || null
+
+            addInstance(listItemVMInstance)
+        })
+    }, [listItemVM, addInstance, testimonialsData.length])
 
     // set animation state
     useEffect(() => {
@@ -183,14 +152,7 @@ export function Testimonials() {
                     setTestimonialsAnimationState('LOADING')
                     break;
                 case 'SUCCESS':
-                    setTestimonialItemsVisibility(false)
-                    try {
-                        setTestimonialsAnimationState('TESTIMONIALS')
-                        setTestimonialItemsVisibility(true)
-                    } catch (error) {
-                        console.error('Failed to set testimonials animation data: ', error)
-                        setTestimonialsAnimationState('ERROR')
-                    }
+                    setTestimonialsAnimationState('TESTIMONIALS')
                     break;
                 case 'ERROR':
                     setTestimonialsAnimationState('ERROR')
@@ -204,8 +166,6 @@ export function Testimonials() {
         setAnimationState()
     }, [
         testimonialsDataFetchState,
-        setTestimonialItemsVisibility,
-        setTestimonialsAnimationData,
         componentIsVisible,
         setTestimonialsAnimationState
     ])
@@ -213,7 +173,6 @@ export function Testimonials() {
     // fetch testimonials data
     useEffect(() => {
         const loadTestimonials = async () => {
-            console.log('Loading testimonials...');
             setTestimonialsDataFetchState('FETCHING')
             try {
                 const data = await loadData()
@@ -229,7 +188,6 @@ export function Testimonials() {
                     })
                 }
 
-                await setTestimonialsAnimationData(data.testimonials)
                 setTestimonialsData(data.testimonials)
                 setTestimonialsDataFetchState('SUCCESS')
             } catch (error) {
@@ -244,47 +202,25 @@ export function Testimonials() {
             loadTestimonials()
         }
     }, [
-        setTestimonialsAnimationData,
         testimonialsData.length,
         testimonialsDataFetchState
     ])
 
     useEffect(() => {
-        console.log('testimonialsData.length', testimonialsData.length)
-        if (testimonialsData.length < 4) return
+        if (!componentIsVisible) return
 
-        let handle: NodeJS.Timeout | null = setInterval(() => {
-            console.log('Rotating testimonials...')
-            setTestimonialDataIndices(([start, _]) => {
-                // Move to next set of 3 items, or wrap around to start
-                const nextStart = start + 3
-                const nextEnd = nextStart + 2
+        const interval = setInterval(() => {
+            if (testimonialsData.length === 0 || scrollIndexValue === null) return
+            const newScrollIndex = (scrollIndexValue + 1) % testimonialsData.length
+            setScrollIndexValue(newScrollIndex)
+        }, SCROLL_DELAY)
 
-                if (nextEnd < testimonialsData.length) {
-                    return [nextStart, nextEnd]
-                } else {
-                    return [0, 2] // Reset to show first 3 items
-                }
-            })
-        }, 3000)
-
-        if (handle && !componentIsVisible) {
-            clearInterval(handle)
-            handle = null
+        if (!isScrolling) {
+            clearInterval(interval)
         }
 
-        return () => {
-            if (handle) clearInterval(handle)
-        }
-    }, [testimonialsData.length, componentIsVisible])
-
-    useEffect(() => {
-        if (testimonialsData.length === 0) return
-
-        staggerTestimonialItemVisibility(false)
-        setTestimonialsAnimationData(testimonialsData)
-        staggerTestimonialItemVisibility(true)
-    }, [testimonialDataIndices, testimonialsData, setTestimonialsAnimationData, setTestimonialItemsVisibility])
+        return () => clearInterval(interval)
+    }, [testimonialsData.length, scrollIndexValue, setScrollIndexValue, isScrolling])
 
     return (
         <div ref={containerRef} className='w-full h-full'>
