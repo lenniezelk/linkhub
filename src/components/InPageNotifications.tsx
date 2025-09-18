@@ -61,7 +61,7 @@ export function InPageNotifications() {
 
     React.useEffect(() => {
         clearNotifications();
-    }, []);
+    }, [clearNotifications]);
 
     React.useEffect(() => {
         if (containerRef.current) {

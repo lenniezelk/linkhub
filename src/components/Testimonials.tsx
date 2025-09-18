@@ -136,7 +136,7 @@ export function Testimonials() {
 
             addInstance(listItemVMInstance)
         })
-    }, [listItemVM, addInstance, testimonialsData.length])
+    }, [listItemVM, addInstance, testimonialsData.length, testimonialsData])
 
     // set animation state
     useEffect(() => {
@@ -219,7 +219,7 @@ export function Testimonials() {
         }
 
         return () => clearInterval(interval)
-    }, [testimonialsData.length, scrollIndexValue, setScrollIndexValue, isScrolling])
+    }, [testimonialsData.length, scrollIndexValue, setScrollIndexValue, isScrolling, componentIsVisible])
 
     return (
         <div ref={containerRef} className='w-full h-full'>

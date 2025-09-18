@@ -166,7 +166,7 @@ function RouteComponent() {
         }).finally(() => {
             setIsSubmitting(false);
         });
-    }, [state, dispatch])
+    }, [state, dispatch, inPageNotifications, navigate])
 
 
     return (
