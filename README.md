@@ -27,6 +27,10 @@ Prerequisites: pnpm
 # Install deps
 pnpm install
 
+# Copy and configure wrangler.jsonc
+cp wrangler.example.jsonc wrangler.jsonc
+# Edit wrangler.jsonc and replace REPLACE_WITH_YOUR_DATABASE_ID with your actual Cloudflare D1 database ID
+
 # Start dev server (http://localhost:3000)
 pnpm dev
 

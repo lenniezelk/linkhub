@@ -157,7 +157,7 @@ function RouteComponent() {
         }).then((result) => {
             if (result.status === 'SUCCESS') {
                 inPageNotifications.addNotification({ type: 'success', message: 'Account created successfully! You can now log in.', keepForever: true });
-                navigate({ to: '/Login' });
+                navigate({ to: '/Login', replace: true });
             } else {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }

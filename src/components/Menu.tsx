@@ -15,11 +15,11 @@ function Menu() {
                 <a href="#" className="text-lg font-medium text-slate-800 hover:text-slate-950">
                     Pricing
                 </a>
-                <a href="#" className="text-lg font-medium text-slate-800 hover:text-slate-950">
+                <Link to="/Login" className="text-lg font-medium text-slate-800 hover:text-slate-950">
                     Login
-                </a>
+                </Link>
                 <Link
-                    to="/signup"
+                    to="/Signup"
                     className="inline-flex items-center rounded-full bg-slate-900 px-4 py-1.5 text-base font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400"
                 >
                     Sign Up

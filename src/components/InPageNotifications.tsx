@@ -57,15 +57,58 @@ export function InPageNotificationsProvider({ children }: { children: React.Reac
 
 export function InPageNotifications() {
     const { notifications, clearNotifications } = useInPageNotifications();
+    const containerRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         clearNotifications();
     }, []);
 
-    if (notifications.length === 0) return null;
+    React.useEffect(() => {
+        if (containerRef.current) {
+            const container = containerRef.current;
+
+            if (notifications.length === 0) {
+                // Animate to height 0 when no notifications
+                container.style.height = '0px';
+                container.style.paddingTop = '0px';
+                container.style.paddingBottom = '0px';
+            } else {
+                // Reset padding first
+                container.style.paddingTop = '';
+                container.style.paddingBottom = '';
+
+                // Measure the natural height
+                container.style.height = 'auto';
+                const height = container.scrollHeight;
+
+                // Animate to the measured height
+                container.style.height = '0px';
+                requestAnimationFrame(() => {
+                    container.style.height = `${height}px`;
+                });
+
+                // Reset to auto after animation
+                const timeout = setTimeout(() => {
+                    if (container.style.height === `${height}px`) {
+                        container.style.height = 'auto';
+                    }
+                }, 300);
+
+                return () => clearTimeout(timeout);
+            }
+        }
+    }, [notifications.length]);
 
     return (
-        <div className="flex flex-col justify-center py-1 px-3 gap-1 transition-all duration-300 ease-in-out overflow-hidden w-full max-w-md">
+        <div
+            ref={containerRef}
+            className="flex flex-col justify-center px-3 gap-1 transition-all duration-300 ease-in-out overflow-hidden w-full max-w-md"
+            style={{
+                height: notifications.length === 0 ? '0px' : 'auto',
+                paddingTop: notifications.length === 0 ? '0px' : '0.25rem',
+                paddingBottom: notifications.length === 0 ? '0px' : '0.25rem'
+            }}
+        >
             {notifications.map((notification) => (
                 <NotificationContainer key={notification.id} notification={notification} />
             ))}

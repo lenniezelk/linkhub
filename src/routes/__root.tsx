@@ -8,7 +8,6 @@ import {
     Scripts,
 } from '@tanstack/react-router'
 import '../styles.css'
-import { Toaster } from 'react-hot-toast'
 import { InPageNotificationsProvider } from '../components/InPageNotifications'
 
 export const Route = createRootRoute({

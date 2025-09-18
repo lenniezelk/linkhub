@@ -55,3 +55,4 @@ src/routeTree.gen.ts
 local-passwords.txt
 
 .wrangler/*
+wrangler.jsonc
