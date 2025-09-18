@@ -44,7 +44,6 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
             </head>
             <body>
                 <InPageNotificationsProvider>
-                    <Toaster />
                     {children}
                     <Scripts />
                 </InPageNotificationsProvider>
