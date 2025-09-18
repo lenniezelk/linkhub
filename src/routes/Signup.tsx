@@ -12,7 +12,8 @@ import { useEffect } from 'react';
 import { createServerFn } from '@tanstack/react-start'
 import { insertUser } from '../lib/db/db';
 import { Result } from '../lib/types';
-import toast from 'react-hot-toast';
+import Footer from '../components/Footer';
+import InPageNotifications, { useInPageNotifications } from '../components/InPageNotifications';
 
 const signupSearchSchema = z.object({
     handle: z.string().optional(),
@@ -47,8 +48,6 @@ type SignupForm = SignupData & {
     confirmPasswordError?: string;
     nameError?: string;
 }
-
-
 
 type SignupFormReducerActions =
     | { type: 'SET_VALUES'; payload: Partial<SignupForm> }
@@ -107,11 +106,13 @@ const isNameValid = (name: string) => {
     return ''
 }
 
-const signUp = createServerFn({ method: 'POST' }).validator(
-    (data: z.infer<typeof SignupFormData>) => SignupFormData.parse(data)
-).handler(async (ctx): Promise<Result> => {
-    await insertUser(ctx.data);
-    return { status: 'SUCCESS' }
+const signUp = createServerFn({ method: 'POST' }).validator(SignupFormData).handler(async (ctx): Promise<Result> => {
+    try {
+        await insertUser(ctx.data);
+        return { status: 'SUCCESS' }
+    } catch (error) {
+        return { status: 'ERROR', error: error.message }
+    }
 })
 
 function RouteComponent() {
@@ -119,6 +120,7 @@ function RouteComponent() {
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const { handle: initialHandle } = Route.useSearch()
     const navigate = useNavigate()
+    const inPageNotifications = useInPageNotifications();
 
     useEffect(() => {
         if (initialHandle) {
@@ -143,21 +145,24 @@ function RouteComponent() {
         }
 
         setIsSubmitting(true)
+        inPageNotifications.clearNotifications();
 
         signUp({
-            handle: state.handle,
-            email: state.email,
-            password: state.password,
-            name: state.name
+            data: {
+                handle: state.handle,
+                email: state.email,
+                password: state.password,
+                name: state.name
+            }
         }).then((result) => {
             if (result.status === 'SUCCESS') {
-                toast.success('Account created successfully! You can now log in.');
-                navigate('/login');
+                inPageNotifications.addNotification({ type: 'success', message: 'Account created successfully! You can now log in.', keepForever: true });
+                navigate({ to: '/Login' });
             } else {
-                toast.error(result.error || 'An error occurred during signup. Please try again.');
+                inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }
         }).catch((error) => {
-            toast.error('An unexpected error occurred. Please try again later.');
+            inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
         }).finally(() => {
             setIsSubmitting(false);
         });
@@ -167,9 +172,10 @@ function RouteComponent() {
     return (
         <Container>
             <Menu />
-            <main className="mt-12 min-h-[calc(100vh-6rem)]">
+            <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
+                <InPageNotifications />
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center">
-                    Get Started with LinkHub for free
+                    Get Started with LinkHub for free.
                 </h1>
                 <form className="mt-6  flex flex-col items-center gap-8 px-4" noValidate onSubmit={(e) => e.preventDefault()}>
                     <div className="relative w-full max-w-md">
@@ -234,9 +240,10 @@ function RouteComponent() {
                             error={state.confirmPasswordError}
                         />
                     </div>
-                    <Button type="submit" disabled={isSubmitting} onClick={submit}>Create Account</Button>
+                    <Button type="submit" disabled={isSubmitting} onClick={submit}>{isSubmitting ? 'Submitting...' : 'Create Account'}</Button>
                 </form>
             </main>
+            <Footer />
         </Container>
     )
 }

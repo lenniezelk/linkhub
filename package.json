@@ -11,10 +11,14 @@
     "lint:fix": "eslint . --fix",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types --env-interface Env",
-    "db-push": "drizzle-kit push",
     "db-generate": "drizzle-kit generate",
-    "db-migrate": "drizzle-kit migrate",
-    "wrangler:dev": "wrangler dev"
+    "wrangler:dev": "wrangler dev",
+    "db:local:migrate": "wrangler d1 migrations apply DB --local",
+    "db:local:query": "wrangler d1 execute DB --local --command",
+    "db:local:studio": "drizzle-kit studio",
+    "db:prod:migrate": "wrangler d1 migrations apply linkhub-prod",
+    "db:local:reset": "rm -f .wrangler/state/v3/d1/miniflare-D1DatabaseObject/* && pnpm db:local:migrate",
+    "db:test": "tsx scripts/test-db.ts"
   },
   "keywords": [],
   "author": "",
@@ -30,7 +34,6 @@
     "drizzle-orm": "^0.44.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-hot-toast": "^2.6.0",
     "tailwindcss": "^4.1.13",
     "vite": "^7.1.5",
     "zod": "^4.1.9"

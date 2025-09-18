@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-router'
 import '../styles.css'
 import { Toaster } from 'react-hot-toast'
+import { InPageNotificationsProvider } from '../components/InPageNotifications'
 
 export const Route = createRootRoute({
     head: () => ({
@@ -43,9 +44,11 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
                 <HeadContent />
             </head>
             <body>
-                <Toaster />
-                {children}
-                <Scripts />
+                <InPageNotificationsProvider>
+                    <Toaster />
+                    {children}
+                    <Scripts />
+                </InPageNotificationsProvider>
             </body>
         </html>
     )
