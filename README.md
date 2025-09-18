@@ -27,15 +27,37 @@ Prerequisites: pnpm
 # Install deps
 pnpm install
 
-# Copy and configure wrangler.jsonc
+# For local development - copy and configure wrangler.jsonc
 cp wrangler.example.jsonc wrangler.jsonc
 # Edit wrangler.jsonc and replace REPLACE_WITH_YOUR_DATABASE_ID with your actual Cloudflare D1 database ID
+
+# For production builds - set environment variable
+export DATABASE_ID=your-actual-database-id-here
 
 # Start dev server (http://localhost:3000)
 pnpm dev
 
-# Build for production
+# Build for production (generates wrangler.jsonc automatically)
 pnpm build
+```
+
+## Environment Variables
+
+For production builds, set these environment variables:
+
+- `DATABASE_ID` (required): Your Cloudflare D1 database ID
+- `DATABASE_NAME` (optional): Database name (defaults to "linkhub-prod")
+- `WORKER_NAME` (optional): Worker name (defaults to "linkhub")
+
+### CI/CD Example
+
+In GitHub Actions or other CI/CD:
+
+```yaml
+env:
+  DATABASE_ID: ${{ secrets.CLOUDFLARE_DATABASE_ID }}
+  DATABASE_NAME: linkhub-prod
+  WORKER_NAME: linkhub
 ```
 
 Notes:

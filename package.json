@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "pnpm generate-wrangler && vite build && pnpm cf-typegen && pnpm db:prod:migrate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "deploy": "npm run build && wrangler deploy",
@@ -18,7 +18,8 @@
     "db:local:studio": "drizzle-kit studio",
     "db:prod:migrate": "wrangler d1 migrations apply linkhub-prod",
     "db:local:reset": "rm -f .wrangler/state/v3/d1/miniflare-D1DatabaseObject/* && pnpm db:local:migrate",
-    "db:test": "tsx scripts/test-db.ts"
+    "db:test": "tsx scripts/test-db.ts",
+    "generate-wrangler": "tsx scripts/generate-wrangler.ts"
   },
   "keywords": [],
   "author": "",
