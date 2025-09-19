@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 
 interface Notification {
     id: string;
@@ -31,15 +31,15 @@ export const useInPageNotifications = () => {
 export function InPageNotificationsProvider({ children }: { children: React.ReactNode }) {
     const [notifications, setNotifications] = React.useState<Notification[]>([]);
 
-    const addNotification = (notification: Omit<Notification, 'id' | 'timerId'>) => {
+    const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timerId'>) => {
         setNotifications((prev) => [...prev, { ...notification, id: generateId() }]);
-    };
+    }, [setNotifications]);
 
-    const removeNotification = (id: string) => {
+    const removeNotification = useCallback((id: string) => {
         setNotifications((prev) => prev.filter((n) => n.id !== id));
-    };
+    }, [setNotifications]);
 
-    const clearNotifications = () => setNotifications([]);
+    const clearNotifications = useCallback(() => setNotifications([]), [setNotifications]);
 
     const value = React.useMemo<InPageNotificationsContextType>(() => ({
         notifications,
