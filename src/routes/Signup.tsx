@@ -11,7 +11,6 @@ import { zodValidator } from '@tanstack/zod-adapter'
 import { useEffect } from 'react';
 import { createServerFn } from '@tanstack/react-start'
 import { insertUser } from '../lib/db/db';
-import { Result } from '../lib/types';
 import Footer from '../components/Footer';
 import InPageNotifications, { useInPageNotifications } from '../components/InPageNotifications';
 
@@ -106,14 +105,7 @@ const isNameValid = (name: string) => {
     return ''
 }
 
-const signUp = createServerFn({ method: 'POST' }).validator(SignupFormData).handler(async (ctx): Promise<Result> => {
-    try {
-        await insertUser(ctx.data);
-        return { status: 'SUCCESS' }
-    } catch (error) {
-        return { status: 'ERROR', error: error.message }
-    }
-})
+const signUp = createServerFn({ method: 'POST' }).validator(SignupFormData).handler(async (ctx) => await insertUser(ctx.data))
 
 function RouteComponent() {
     const [state, dispatch] = React.useReducer(reducer, initialState)
@@ -162,6 +154,7 @@ function RouteComponent() {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }
         }).catch((error) => {
+            console.error('Signup error:', error);
             inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
         }).finally(() => {
             setIsSubmitting(false);
