@@ -3,7 +3,8 @@ import { getBindings } from '../cf_bindings';
 import { usersTable } from './schema';
 import { hashPassword } from '../auth';
 import { eq } from 'drizzle-orm';
-import { Result } from '../types';
+import { Result, SignupData } from '../types';
+import { Sign } from 'crypto';
 
 
 const dbClient = () => {
@@ -11,7 +12,7 @@ const dbClient = () => {
     return drizzle(cfBindings.DB);
 }
 
-export const insertUser = async (userData: typeof usersTable.$inferInsert): Promise<Result> => {
+export const insertUser = async (userData: SignupData): Promise<Result> => {
     const db = dbClient();
 
     // check if email already exists
@@ -32,12 +33,7 @@ export const insertUser = async (userData: typeof usersTable.$inferInsert): Prom
         };
     }
 
-    // Hash the password before storing
-    if (userData.passwordHash) {
-        userData.passwordHash = await hashPassword(userData.passwordHash);
-    }
-
-    await db.insert(usersTable).values(userData);
+    await db.insert(usersTable).values({ ...userData, passwordHash: await hashPassword(userData.password) });
 
     return { status: 'SUCCESS' };
 }

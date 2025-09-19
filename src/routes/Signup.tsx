@@ -13,6 +13,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { insertUser } from '../lib/db/db';
 import Footer from '../components/Footer';
 import InPageNotifications, { useInPageNotifications } from '../components/InPageNotifications';
+import { SignupData, SignupFormData } from '../lib/types';
 
 const signupSearchSchema = z.object({
     handle: z.string().optional(),
@@ -30,14 +31,7 @@ export const Route = createFileRoute('/Signup')({
     validateSearch: zodValidator(signupSearchSchema)
 })
 
-const SignupFormData = z.object({
-    handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
-    email: z.email(),
-    password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]/),
-    name: z.string().min(3).max(100),
-});
 
-export type SignupData = z.infer<typeof SignupFormData>;
 
 type SignupForm = SignupData & {
     handleError?: string;
