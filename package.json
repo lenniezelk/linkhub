@@ -16,8 +16,8 @@
     "db:local:migrate": "wrangler d1 migrations apply DB --local",
     "db:local:query": "wrangler d1 execute DB --local --command",
     "db:local:studio": "drizzle-kit studio",
-    "db:prod:migrate": "wrangler d1 migrations apply linkhub-prod",
-    "db:prod:query": "wrangler d1 execute linkhub-prod --command",
+    "db:prod:migrate": "wrangler d1 migrations apply linkhub-prod --remote",
+    "db:prod:query": "wrangler d1 execute linkhub-prod --remote --command",
     "db:local:reset": "rm -f .wrangler/state/v3/d1/miniflare-D1DatabaseObject/* && pnpm db:local:migrate",
     "db:test": "tsx scripts/test-db.ts",
     "generate-wrangler": "tsx scripts/generate-wrangler.ts"
