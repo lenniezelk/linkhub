@@ -1,0 +1,63 @@
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "name": "linkhub",
+    "main": ".output/server/index.mjs",
+    "compatibility_date": "2025-09-16",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "assets": {
+        "directory": ".output/public"
+    },
+    "observability": {
+        "enabled": true
+    },
+    "vars": {
+        "JWT_SECRET": "REPLACE_WITH_YOUR_JWT_SECRET",
+        "SESSION_SECRET": "REPLACE_WITH_YOUR_SESSION_SECRET"
+    },
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "linkhub-production",
+            "database_id": "REPLACE_WITH_YOUR_DATABASE_ID",
+            "migrations_dir": "drizzle",
+            "preview_database_id": "DB"
+        }
+    ],
+    "workers_dev": true,
+    "env": {
+        "staging": {
+            "name": "linkhub-staging",
+            "vars": {
+                "JWT_SECRET": "REPLACE_WITH_YOUR_STAGING_JWT_SECRET",
+                "SESSION_SECRET": "REPLACE_WITH_YOUR_STAGING_SESSION_SECRET"
+            },
+            "d1_databases": [
+                {
+                    "binding": "DB",
+                    "database_name": "linkhub-staging",
+                    "database_id": "REPLACE_WITH_YOUR_STAGING_DATABASE_ID",
+                    "migrations_dir": "drizzle"
+                }
+            ],
+            "workers_dev": true
+        },
+        "production": {
+            "name": "linkhub-production",
+            "vars": {
+                "JWT_SECRET": "REPLACE_WITH_YOUR_PRODUCTION_JWT_SECRET",
+                "SESSION_SECRET": "REPLACE_WITH_YOUR_PRODUCTION_SESSION_SECRET"
+            },
+            "d1_databases": [
+                {
+                    "binding": "DB",
+                    "database_name": "linkhub-production",
+                    "database_id": "REPLACE_WITH_YOUR_PRODUCTION_DATABASE_ID",
+                    "migrations_dir": "drizzle"
+                }
+            ],
+            "workers_dev": true
+        }
+    }
+}

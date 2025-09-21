@@ -1,0 +1,34 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+count.txt
+.env
+.nitro
+.tanstack
+.output
+.vinxi
+todos.json
+
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+
+# Lint/formatter caches
+.eslintcache
+.stylelintcache
+
+# Optional: TanStack Router generated tree (safe to ignore if not tracked)
+src/routeTree.gen.ts
+
+.nitro/*
+.output/*
+
+local-passwords.txt
+
+.wrangler/*
+wrangler.jsonc
