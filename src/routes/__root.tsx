@@ -1,6 +1,22 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanstackDevtools } from '@tanstack/react-devtools'
+// Devtools are dynamically imported only in development to avoid production build issues
+let Devtools: React.ReactNode = null;
+if (import.meta.env.DEV) {
+  // Use dynamic imports to ensure these heavy + potentially incompatible SSR packages are not in prod bundle
+  const RouterPanelPromise = import('@tanstack/react-router-devtools').then(m => m.TanStackRouterDevtoolsPanel);
+  const DevtoolsPromise = import('@tanstack/react-devtools').then(m => m.TanstackDevtools);
+  Promise.all([RouterPanelPromise, DevtoolsPromise]).then(([RouterPanel, DevtoolsComp]) => {
+    // Assign a JSX element to variable (cannot set state here easily; this runs once on module eval in dev)
+    Devtools = (
+      <DevtoolsComp
+        config={{ position: 'bottom-left' }}
+        plugins={[{ name: 'Tanstack Router', render: <RouterPanel /> }]}
+      />
+    );
+  }).catch(() => {
+    // swallow errors in devtools loading
+  });
+}
 import { createServerFn } from '@tanstack/react-start';
 import appCss from '../styles.css?url'
 import { useAppSession } from '@/lib/useAppSession';
@@ -74,17 +90,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <TanstackDevtools
-          config={{
-            position: 'bottom-left',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
+        {Devtools}
         <Scripts />
       </body>
     </html>

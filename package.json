@@ -14,7 +14,7 @@
     "check": "biome check",
     "cf-typegen": "wrangler types --env-interface Env",
     "deploy:prod": "pnpm build && pnpm wrangler deploy --env production",
-    "deploy:staging": "pnpm build && pnpm wrangler deploy --env staging",
+    "deploy:staging": "pnpm build && pnpm db:staging:migrate && pnpm wrangler deploy --env staging",
     "db-generate": "drizzle-kit generate",
     "db:local:migrate": "wrangler d1 migrations apply DB --local",
     "db:local:query": "wrangler d1 execute DB --local --command",
