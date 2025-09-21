@@ -1,301 +1,262 @@
-Welcome to your new TanStack app! 
+<div align="center">
+  <img src="public/logo512.png" alt="LinkHub Logo" width="120" />
+  
+  # LinkHub
+  <strong>Unified personal hub for managing, sharing, and showcasing your digital presence.</strong>
+  <br />
+  <em>Built on Cloudflare Workers + TanStack React Start + Drizzle ORM (D1)</em>
+</div>
 
-# Getting Started
+---
 
-To run this application:
+## Overview
+
+LinkHub provides user signup/login (local + OAuth via Google), handle claiming, and a foundation for storing and presenting user-centric link/profile data (extensible). It leverages Cloudflare's edge runtime for fast global performance, a D1 database for persistence, and modern React 19 with TanStack Router for file‑based routing and progressive enhancement.
+
+## Key Features
+
+- React 19 + TanStack React Start (SSR + streaming)
+- File-based routing via `@tanstack/react-router`
+- Cloudflare Workers deployment (`wrangler`), edge‑compatible code (no Node‑only APIs)
+- D1 (SQLite) database with Drizzle ORM & migrations
+- Secure password hashing (PBKDF2 via WebCrypto) + JWT auth (JOSE)
+- Google OAuth (via `@react-oauth/google`)
+- Tailwind CSS v4 for styling
+- Biome for linting/formatting
+- Type-safe environment bindings in dev using `wrangler` platform proxy
+- Rive animations (`@rive-app/react-canvas`)
+
+## Tech Stack
+
+| Layer | Tech |
+|-------|------|
+| Runtime | Cloudflare Workers (edge) |
+| Framework | TanStack React Start + React 19 |
+| Routing | `@tanstack/react-router` (file-based) |
+| DB | Cloudflare D1 (SQLite) + Drizzle ORM |
+| Auth | PBKDF2 password hashing + JWT (HS256) + Google OAuth |
+| Styling | Tailwind CSS 4 |
+| Dev Tooling | Vite 6, Biome, Vitest, TypeScript 5.7 |
+
+## Monorepo / Structure Snapshot
+
+```
+src/
+  routes/           # File-based routes (SSR aware)
+  components/       # Reusable UI components
+  lib/
+    auth.ts         # Hashing + JWT helpers
+    cf_bindings.ts  # Edge env bindings loader (dev vs prod)
+    db/             # Drizzle client + schema
+  styles.css        # Tailwind entry
+drizzle/            # Generated SQL migrations + journal
+drizzle.config.ts   # Drizzle kit configuration
+wrangler.jsonc      # Cloudflare Worker + env bindings
+```
+
+## Quick Start (Local Development)
 
 ```bash
 pnpm install
-pnpm start
+pnpm dev
 ```
 
-# Building For Production
+Then open http://localhost:3000
 
-To build this application for production:
+### Prerequisites
+
+- Node.js 20+ (Cloudflare Workers use modern runtime semantics)
+- A Cloudflare account with D1 database(s) provisioned (for remote/staging/prod)
+- `wrangler` configured (login via `pnpm wrangler login` if needed)
+
+## Environment & Secrets
+
+Edge runtime secrets are injected via `wrangler.jsonc` `vars` for staging/production. For **local dev**, the project uses a baked-in development fallback JWT secret in `auth.ts` unless you override it.
+
+Recommended `.env` variables (used by Drizzle generation):
+
+```
+CLOUDFLARE_ACCOUNT_ID=xxxxx
+CLOUDFLARE_DATABASE_ID=xxxxx
+CLOUDFLARE_D1_TOKEN=cf_d1_api_token
+```
+
+Never commit real production secrets to version control. Rotate any secrets appearing in history before launch.
+
+## Database (D1 + Drizzle)
+
+Schema file: `src/lib/db/schema.ts`
+
+Current tables:
+
+- `users`
+  - `id` (UUID primary key)
+  - `email` (unique, required)
+  - `name` (required)
+  - `password_hash` (nullable for OAuth users)
+  - `handle` (unique, optional)
+  - `created_at` (timestamp)
+  - `emailVerified` (boolean)
+
+### Migrations Workflow
+
+Generate migration SQL from schema changes:
 
 ```bash
-pnpm build
+pnpm db-generate
 ```
+
+Apply migrations locally (Miniflare / D1 preview):
+
+```bash
+pnpm db:local:migrate
+```
+
+Reset local D1 (drops preview data):
+
+```bash
+pnpm db:local:reset
+```
+
+Apply to staging:
+
+```bash
+pnpm db:staging:migrate
+```
+
+Apply to production:
+
+```bash
+pnpm db:prod:migrate
+```
+
+Open Drizzle Studio (schema explorer):
+
+```bash
+pnpm db:local:studio
+```
+
+Run ad-hoc SQL query locally:
+
+```bash
+pnpm db:local:query -- "SELECT * FROM users LIMIT 5;"
+```
+
+## Auth Flow
+
+1. User registers (local): password hashed via PBKDF2 (100k iterations, SHA‑256) -> stored as `iterations:salt:hash`.
+2. JWT created with `HS256` using secret from env (`JWT_SECRET`) and returned/stored (implementation detail: token generation in `auth.ts`).
+3. OAuth (Google) users skip password hash; `handle` can be claimed later.
+4. Verification uses same PBKDF2 parameters to re-derive and constant-time compare.
+
+### JWT Notes
+- Expiration: 7 days
+- Claims: `sub`, `email`, `name`, `handle`
+- Rotate `JWT_SECRET` carefully; consider multi-key support if adding key rotation later.
+
+## Scripts Reference
+
+| Script | Purpose |
+|--------|---------|
+| `pnpm dev` | Start Vite dev server (edge SSR emulation) |
+| `pnpm build` | Build server + client bundles (`.output/`) |
+| `pnpm start` | Run built worker locally (after build) |
+| `pnpm serve` | Vite preview static serve |
+| `pnpm deploy:staging` | Build, migrate staging DB, deploy worker (staging env) |
+| `pnpm deploy:prod` | Build then deploy to production (no auto-migrate prod DB except included step) |
+| `pnpm cf-typegen` | Generate `Env` type from Wrangler config |
+| `pnpm generate-wrangler` | Regenerate wrangler config (script scaffolding) |
+| `pnpm db-generate` | Drizzle kit generate migrations |
+| `pnpm db:local:migrate` | Apply migrations to local preview DB |
+| `pnpm db:local:reset` | Reset local DB (dangerous) |
+| `pnpm db:staging:migrate` | Apply migrations to staging D1 |
+| `pnpm db:prod:migrate` | Apply migrations to production D1 |
+| `pnpm test` | Run Vitest test suite |
+| `pnpm lint` | Biome lint |
+| `pnpm lint:fix` | Lint with auto-fix |
+| `pnpm format` | Format code |
+| `pnpm check` | Combined lint + format check |
+| `pnpm clean` | Remove build artifacts |
+| `pnpm reset` | Full clean + reinstall deps |
+
+## Development Notes
+
+- `cf_bindings.ts` initializes Cloudflare platform proxy only in dev (`import.meta.env.DEV`). Avoid using Node core modules not polyfilled by Workers.
+- React context errors (e.g., `Invalid hook call`) can occur if multiple React instances get bundled; ensure only one `react` version is installed (pnpm should dedupe). Delete `.vite` cache if symptoms persist: `rm -rf node_modules/.vite`.
+
+## Troubleshooting
+
+### Esbuild "Could not resolve 'sqlite'" during dev
+`wrangler` internally references an optional `sqlite` dependency for local tooling. In a Vite SSR bundle, this may surface. Workarounds:
+1. Mark it external in Vite config (already partially addressed if you updated config):
+   ```ts
+   optimizeDeps: { exclude: ['sqlite'] },
+   ssr: { external: ['sqlite'] }
+   ```
+2. Ignore: Cloudflare Workers runtime does not require the native `sqlite` package—D1 is HTTP based.
+3. If persists, pin wrangler version or clear cache: `pnpm clean && pnpm install`.
+
+### Binding Initialization Errors
+If you see: `Dev bindings not initialized yet. Call initDevEnv() first.` ensure `cf_bindings.ts` executed on server side only (avoid importing inside purely client components early).
+
+### JWT Secret Errors
+If `JWT_SECRET` length < 32 or missing, token creation will throw. Set a secure random hex string.
 
 ## Testing
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+Run all tests:
 
 ```bash
 pnpm test
 ```
 
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
+Add vitest + Testing Library tests under `src/` or a `tests/` directory. Example patterns: `*.test.ts(x)`.
 
 ## Linting & Formatting
 
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
-
+Biome provides unified lint + format:
 
 ```bash
 pnpm lint
 pnpm format
-pnpm check
+pnpm check   # CI style aggregate
 ```
 
+## Deployment
 
-
-## Routing
-This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add another a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-
-import { Link } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <header>
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-        </nav>
-      </header>
-      <Outlet />
-      <TanStackRouterDevtools />
-    </>
-  ),
-})
-```
-
-The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-const peopleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/people",
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
-    }>;
-  },
-  component: () => {
-    const data = peopleRoute.useLoaderData();
-    return (
-      <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    );
-  },
-});
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-### React-Query
-
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
-
-First add your dependencies:
-
+Staging:
 ```bash
-pnpm add @tanstack/react-query @tanstack/react-query-devtools
+pnpm deploy:staging
 ```
-
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
-
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-// ...
-
-const queryClient = new QueryClient();
-
-// ...
-
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
-}
-```
-
-You can also add TanStack Query Devtools to the root route (optional).
-
-```tsx
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ReactQueryDevtools buttonPosition="top-right" />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
-```
-
-Now you can use `useQuery` to fetch your data.
-
-```tsx
-import { useQuery } from "@tanstack/react-query";
-
-import "./App.css";
-
-function App() {
-  const { data } = useQuery({
-    queryKey: ["people"],
-    queryFn: () =>
-      fetch("https://swapi.dev/api/people")
-        .then((res) => res.json())
-        .then((data) => data.results as { name: string }[]),
-    initialData: [],
-  });
-
-  return (
-    <div>
-      <ul>
-        {data.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export default App;
-```
-
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
-
-## State Management
-
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
-
-First you need to add TanStack Store as a dependency:
-
+Production:
 ```bash
-pnpm add @tanstack/store
+pnpm deploy:prod
 ```
 
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
+Ensure migrations are applied / safe before production deployment. Consider manual approval for prod DB changes.
 
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
-import "./App.css";
+## Future Roadmap (Ideas)
 
-const countStore = new Store(0);
+- User link collections & ordering
+- Public profile pages with analytics (click counts)
+- Email verification workflow
+- Password reset & session revocation
+- Rate limiting / abuse protection (KV or R2 + durable object token bucket)
+- Audit logging (open telemetry / analytics events)
+- Theming & custom domains
 
-function App() {
-  const count = useStore(countStore);
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-    </div>
-  );
-}
+## License
 
-export default App;
-```
+Proprietary (default). Add a LICENSE file if you intend to open-source.
 
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
+## Acknowledgements
 
-Let's check this out by doubling the count using derived state.
+- TanStack React Start & Router
+- Cloudflare Workers & D1
+- Drizzle ORM
+- Rive
+- Biome, Vitest, Tailwind
 
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store, Derived } from "@tanstack/store";
-import "./App.css";
+---
 
-const countStore = new Store(0);
-
-const doubledStore = new Derived({
-  fn: () => countStore.state * 2,
-  deps: [countStore],
-});
-doubledStore.mount();
-
-function App() {
-  const count = useStore(countStore);
-  const doubledCount = useStore(doubledStore);
-
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-      <div>Doubled - {doubledCount}</div>
-    </div>
-  );
-}
-
-export default App;
-```
-
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
-
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
-
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+Happy building! 🚀

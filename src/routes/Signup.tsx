@@ -1,5 +1,5 @@
 import { type CredentialResponse, GoogleLogin } from '@react-oauth/google';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
 import * as jose from 'jose';
 import * as React from 'react';
@@ -38,7 +38,7 @@ export const Route = createFileRoute('/Signup')({
     validateSearch: zodValidator(signupSearchSchema),
     beforeLoad: async ({ context }) => {
         if (context.user) {
-            return { redirect: '/app' };
+            throw redirect({ to: '/app' });
         }
     },
 })
