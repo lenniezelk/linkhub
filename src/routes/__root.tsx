@@ -1,4 +1,11 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start';
+import appCss from '../styles.css?url'
+import { useAppSession } from '@/lib/useAppSession';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { InPageNotificationsProvider } from '@/components/InPageNotifications';
+
+
 // Devtools are dynamically imported only in development to avoid production build issues
 let Devtools: React.ReactNode = null;
 if (import.meta.env.DEV) {
@@ -17,11 +24,7 @@ if (import.meta.env.DEV) {
     // swallow errors in devtools loading
   });
 }
-import { createServerFn } from '@tanstack/react-start';
-import appCss from '../styles.css?url'
-import { useAppSession } from '@/lib/useAppSession';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import { InPageNotificationsProvider } from '@/components/InPageNotifications';
+
 
 export const fetchMe = createServerFn({ method: 'GET' }).handler(async () => {
   const session = await useAppSession();
@@ -67,7 +70,8 @@ export const Route = createRootRoute({
     return {
       user: result.data.user,
     }
-  }
+  },
+  notFoundComponent: () => <div>404 - Not Found</div>,
 })
 
 function RootComponent() {

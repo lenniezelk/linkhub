@@ -1,5 +1,3 @@
-import * as jose from 'jose'
-import type { User, JWTPayload } from './types';
 
 // Helper functions to convert between formats
 const hex = (buff: ArrayBuffer) => [...new Uint8Array(buff)].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -76,72 +74,4 @@ export async function verifyPassword(password: string, storedHash: string): Prom
     // 3. Compare the new hash with the stored hash
     const hashAttemptHex = hex(hashBufferAttempt);
     return hashAttemptHex === hashHex;
-}
-
-// JWT Functions using Jose library
-const getJWTSecret = (): string => {
-    // For Cloudflare Workers/Pages, environment variables are available via globalThis
-    const secret = import.meta.env.DEV
-        ? '6ddebf6d2eb6d5fe8204c31e0c2a141d14a8fbbd9cd741aa4ac33057a882365e19f3636ece2c156d9109e9c9f48d8043ebf7135c85a5a5c683a4f6179bacf415'
-        : process.env.JWT_SECRET;
-
-    if (!secret) {
-        throw new Error('JWT_SECRET environment variable is required');
-    }
-
-    // Ensure minimum length for security
-    if (secret.length < 32) {
-        throw new Error('JWT_SECRET must be at least 32 characters long');
-    }
-
-    return secret;
-};
-
-/**
- * Creates a JWT token for a user using Jose library
- * @param user User data to encode in the token
- * @returns JWT token string
- */
-export async function createJWT(user: User): Promise<string> {
-    const secret = new TextEncoder().encode(getJWTSecret());
-
-    const jwt = await new jose.SignJWT({
-        email: user.email,
-        name: user.name,
-        handle: user.handle,
-    })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setSubject(user.id)
-        .setExpirationTime('7d')
-        .sign(secret);
-
-    return jwt;
-}
-
-/**
- * Verifies and decodes a JWT token using Jose library
- * @param token JWT token to verify
- * @returns Decoded payload if valid, null if invalid
- */
-export async function verifyJWT(token: string): Promise<JWTPayload | null> {
-    try {
-        const secret = new TextEncoder().encode(getJWTSecret());
-
-        const { payload } = await jose.jwtVerify(token, secret);
-
-        // Jose automatically handles expiration checking
-        return {
-            sub: payload.sub as string,
-            email: payload.email as string,
-            name: payload.name as string,
-            handle: payload.handle as string | null,
-            iat: payload.iat as number,
-            exp: payload.exp as number,
-        };
-    } catch (error) {
-        // Jose throws errors for invalid/expired tokens
-        console.error('JWT verification error:', error);
-        return null;
-    }
 }

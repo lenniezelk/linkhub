@@ -11,8 +11,8 @@ import Footer from '@/components/Footer';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
-import { GoogleSignupData, type SignupData, SignupFormData } from '@/lib/types';
-import { validateEmail, validateHandle, validatePassword } from '@/lib/validation';
+import { GoogleAuthData, type SignupData, SignupFormData } from '@/lib/types';
+import { isConfirmPasswordValid, isEmailValid, isHandleValid, isNameValid, isPasswordValid, validateEmail, validateHandle, validatePassword } from '@/lib/validation';
 // import { signUp, signUpGoogle } from '@/server/auth';
 import { useAppSession } from '@/lib/useAppSession';
 import { hashPassword } from '@/lib/auth';
@@ -79,37 +79,7 @@ const reducer = (state: SignupForm, action: SignupFormReducerActions): SignupFor
     }
 }
 
-const isEmpty = (str: string) => !str || str.trim() === ''
 
-const isEmailValid = (email: string) => {
-    if (isEmpty(email)) return 'Email is required'
-    if (!validateEmail(email)) return 'Email is invalid'
-    return ''
-}
-
-const isPasswordValid = (password: string) => {
-    if (isEmpty(password)) return 'Password is required'
-    if (!validatePassword(password)) return 'Password must be at least 8 characters long and contain at least one letter and one number'
-    return ''
-}
-
-const isConfirmPasswordValid = (password: string, confirmPassword: string) => {
-    if (isEmpty(confirmPassword)) return 'Please confirm your password'
-    if (password !== confirmPassword) return 'Passwords do not match'
-    return ''
-}
-
-const isHandleValid = (handle: string) => {
-    if (isEmpty(handle)) return 'Handle is required'
-    if (!validateHandle(handle)) return 'Handle must be 3-20 characters long and can only contain letters, numbers, and underscores'
-    return ''
-}
-
-const isNameValid = (name: string) => {
-    if (isEmpty(name)) return 'Name is required'
-    if (name.length < 3 || name.length > 100) return 'Name must be between 3 and 100 characters long'
-    return ''
-}
 
 export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormData).handler(async (ctx) => {
     const db = dbClient();
@@ -152,7 +122,7 @@ export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormDat
 
 })
 
-export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleSignupData).handler(async (ctx) => {
+export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleAuthData).handler(async (ctx) => {
     const db = dbClient();
     const userData = ctx.data;
 
@@ -221,10 +191,10 @@ function RouteComponent() {
 
         signUp({
             data: {
-                handle: state.handle,
-                email: state.email,
-                password: state.password,
-                name: state.name
+                handle: state.handle.trim(),
+                email: state.email.trim(),
+                password: state.password.trim(),
+                name: state.name.trim()
             }
         }).then((result) => {
             if (result.status === 'SUCCESS') {
