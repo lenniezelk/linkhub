@@ -161,6 +161,7 @@ function RouteComponent() {
     const { handle: initialHandle } = Route.useSearch()
     const navigate = useNavigate()
     const inPageNotifications = useInPageNotifications();
+    const routeContext = Route.useRouteContext();
 
     useEffect(() => {
         if (initialHandle) {
@@ -203,7 +204,7 @@ function RouteComponent() {
             } else {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }
-    }).catch((_error) => {
+        }).catch((_error) => {
             inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
         }).finally(() => {
             setIsSubmitting(false);
@@ -220,7 +221,7 @@ function RouteComponent() {
             } else {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }
-    }).catch((_error) => {
+        }).catch((_error) => {
             inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred during Google signup. Please try again later.', keepForever: true });
         });
     }, [inPageNotifications, navigate]);
@@ -231,7 +232,7 @@ function RouteComponent() {
 
     return (
         <Container>
-            <Menu />
+            <Menu user={routeContext.user} />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
                 <InPageNotifications />
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center">

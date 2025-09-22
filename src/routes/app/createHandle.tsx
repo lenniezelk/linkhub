@@ -18,7 +18,6 @@ import Footer from '@/components/Footer'
 export const Route = createFileRoute('/app/createHandle')({
   component: RouteComponent,
   beforeLoad: async ({ context }) => {
-    console.log('Checking user in beforeLoad of /app/createHandle:', context.user); // --- IGNORE ---
     if (context.user?.handle) {
       throw redirect({ to: '/app' });
     }
@@ -27,12 +26,16 @@ export const Route = createFileRoute('/app/createHandle')({
 
 const saveHandle = createServerFn({ method: 'POST' }).validator(HandleFormData).handler(async (ctx) => {
   const db = dbClient();
-  const handleData = ctx.data;
+  // Normalize handle (e.g., force lower-case for uniqueness semantics)
+  const normalizedHandle = ctx.data.handle.toLowerCase();
+  const handleData = { handle: normalizedHandle };
 
   const appSession = await useAppSession();
   if (!appSession.data?.user) {
-    throw redirect({ to: '/Login' });
+    throw redirect({ to: '/Login', replace: true });
   }
+
+  console.log('Saving handle:', handleData, appSession.data); // --- IGNORE ---
 
   const existingHandle = await db.select().from(usersTable).where(eq(usersTable.handle, handleData.handle)).limit(1);
   if (existingHandle.length > 0) {
@@ -42,17 +45,13 @@ const saveHandle = createServerFn({ method: 'POST' }).validator(HandleFormData).
     };
   }
 
-  db.update(usersTable)
+  // IMPORTANT: await the update so it actually commits before returning.
+  await db.update(usersTable)
     .set({ handle: handleData.handle })
     .where(eq(usersTable.id, appSession.data.user.id));
 
   await appSession.update({
-    user: {
-      id: appSession.data.user.id,
-      email: appSession.data.user.email,
-      name: appSession.data.user.name,
-      handle: handleData.handle,
-    },
+    user: { ...appSession.data.user, handle: handleData.handle },
   });
 
   return {
@@ -66,6 +65,8 @@ function RouteComponent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const inPageNotifications = useInPageNotifications();
   const navigate = useNavigate();
+  const routeContext = Route.useRouteContext();
+
 
   const submit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
@@ -92,7 +93,7 @@ function RouteComponent() {
   }, [handle])
 
   return <Container>
-    <Menu />
+    <Menu user={routeContext.user} />
     <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
       <InPageNotifications />
       <h1 className="text-2xl font-bold mb-4 text-slate-900">Create Your Handle/Username</h1>

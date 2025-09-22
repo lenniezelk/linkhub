@@ -24,11 +24,12 @@ export const Route = createFileRoute('/')({
 
 function RouteComponent() {
     const [handle, setHandle] = useState('')
+    const routeContext = Route.useRouteContext();
 
     return (
         <Container>
             {/* Top navigation */}
-            <Menu />
+            <Menu user={routeContext.user} />
 
             {/* Hero section 1 */}
             <section className="mt-12 grid min-h-[calc(100vh-6rem)] grid-cols-1 content-center gap-8 md:grid-cols-2 md:items-center">

@@ -158,6 +158,7 @@ function RouteComponent() {
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const navigate = useNavigate()
     const inPageNotifications = useInPageNotifications();
+    const routeContext = Route.useRouteContext();
 
     const submit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -216,7 +217,7 @@ function RouteComponent() {
 
     return (
         <Container>
-            <Menu />
+            <Menu user={routeContext.user} />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
                 <InPageNotifications />
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center">
