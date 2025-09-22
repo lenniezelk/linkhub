@@ -35,7 +35,7 @@ function Menu({ user }: MenuProps) {
                         Sign Up
                     </Link>
                 )}
-                {user && pathname.toLowerCase().startsWith('/app') && (
+                {user && !pathname.toLowerCase().startsWith('/app') && (
                     <Link
                         to="/app"
                         className="inline-flex items-center rounded-full bg-slate-900 px-4 py-1.5 text-base font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400"
