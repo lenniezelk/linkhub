@@ -59,3 +59,10 @@ export const HandleFormData = z.object({
 });
 
 export type HandleData = z.infer<typeof HandleFormData>;
+
+export type SocialLinkType = 'instagram' | 'twitter' | 'linkedin' | 'facebook' | 'tiktok' | 'youtube' | 'website' | 'github'  | 'pinterest';
+
+export type SocialLinkServerData = {
+    type: SocialLinkType;
+    url: string;
+};

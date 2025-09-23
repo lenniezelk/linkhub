@@ -8,6 +8,13 @@
       "when": 1758439616133,
       "tag": "0000_exotic_loa",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1758571226521,
+      "tag": "0001_confused_talon",
+      "breakpoints": true
     }
   ]
 }
