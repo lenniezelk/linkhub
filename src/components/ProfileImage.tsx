@@ -1,7 +1,6 @@
 import * as RiveReactCanvas from '@rive-app/react-canvas';
-const { useViewModel, useViewModelInstance, useViewModelInstanceBoolean, useRive, decodeImage, useViewModelInstanceImage } = RiveReactCanvas;
+const { useRive } = RiveReactCanvas;
 import LinkHubRiveFile from '../assets/linkhub.riv'
-import React from 'react';
 
 
 interface ProfileImageProps {
