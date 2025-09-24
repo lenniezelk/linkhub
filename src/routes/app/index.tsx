@@ -15,6 +15,17 @@ import { asc, desc, eq } from 'drizzle-orm';
 import { InAppTheme, SocialLinkServerData } from '@/lib/types';
 import ProfileImage from '@/components/ProfileImage';
 
+// Import icons
+import instagramIcon from '@/assets/icons/instagram.svg';
+import xIcon from '@/assets/icons/x.svg';
+import tiktokIcon from '@/assets/icons/tiktok.svg';
+import pinterestIcon from '@/assets/icons/pinterest.svg';
+import youtubeIcon from '@/assets/icons/youtube.svg';
+import facebookIcon from '@/assets/icons/facebook.svg';
+import linkedinIcon from '@/assets/icons/linkedin.svg';
+import githubIcon from '@/assets/icons/github.svg';
+import webIcon from '@/assets/icons/web.svg';
+
 
 export const Route = createFileRoute('/app/')({
     component: RouteComponent,
@@ -552,7 +563,7 @@ function RouteComponent() {
                 <form noValidate className="mt-6 flex flex-col items-start gap-8 px-4 max-w-md w-full" onSubmit={submit}>
                     <div className='flex items-center w-full'>
                         <label htmlFor="instagram" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/instagram.svg" alt="Instagram" className='h-8 w-8' />
+                            <img src={instagramIcon} alt="Instagram" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -568,7 +579,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="twitter" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/x.svg" alt="Twitter" className='h-8 w-8' />
+                            <img src={xIcon} alt="Twitter" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -584,7 +595,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="tiktok" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/tiktok.svg" alt="TikTok" className='h-8 w-8' />
+                            <img src={tiktokIcon} alt="TikTok" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -600,7 +611,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="pinterest" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/pinterest.svg" alt="Pinterest" className='h-8 w-8' />
+                            <img src={pinterestIcon} alt="Pinterest" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -616,7 +627,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="youtube" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/youtube.svg" alt="YouTube" className='h-8 w-8' />
+                            <img src={youtubeIcon} alt="YouTube" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -632,7 +643,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="facebook" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/facebook.svg" alt="Facebook" className='h-8 w-8' />
+                            <img src={facebookIcon} alt="Facebook" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -648,7 +659,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="linkedin" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/linkedin.svg" alt="LinkedIn" className='h-8 w-8' />
+                            <img src={linkedinIcon} alt="LinkedIn" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -664,7 +675,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="github" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/github.svg" alt="GitHub" className='h-8 w-8' />
+                            <img src={githubIcon} alt="GitHub" className='h-8 w-8' />
                         </label>
                         <Input
                             type="text"
@@ -680,7 +691,7 @@ function RouteComponent() {
                     </div>
                     <div className='flex items-center w-full'>
                         <label htmlFor="website" className='mr-2 flex-shrink-0'>
-                            <img src="/icons/web.svg" alt="Website" className='h-8 w-8' />
+                            <img src={webIcon} alt="Website" className='h-8 w-8' />
                         </label>
                         <Input
                             type="url"
