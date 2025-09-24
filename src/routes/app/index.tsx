@@ -10,8 +10,8 @@ import InPageNotifications, { useInPageNotifications } from '@/components/InPage
 import { createServerFn } from '@tanstack/react-start';
 import { useAppSession } from '@/lib/useAppSession';
 import { dbClient } from '@/lib/db/dbClient';
-import { linksTable, profileImagesTable } from '@/lib/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { linksTable, profileImagesTable, themesTable, userSettingsTable } from '@/lib/db/schema';
+import { asc, desc, eq } from 'drizzle-orm';
 import { InAppTheme, SocialLinkServerData } from '@/lib/types';
 import ProfileImage from '@/components/ProfileImage';
 
@@ -75,6 +75,7 @@ type OtherDashboardData = {
     isSubmitting: boolean;
     isSubmittingProfileImage: boolean;
     currentThemeId?: string;
+    themes: InAppTheme[];
 };
 
 type DashboardData = LinksData & OtherDashboardData;
@@ -155,11 +156,21 @@ const fetchInitialData = createServerFn({ method: 'GET' }).handler(async () => {
 
     const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, appSession.data.user.id)).orderBy(desc(profileImagesTable.createdAt)).limit(1);
 
+    const themes = await db.select().from(themesTable).orderBy(asc(themesTable.name));
+
+    // Get user's current theme selection
+    const userSettings = await db.select()
+        .from(userSettingsTable)
+        .where(eq(userSettingsTable.userId, appSession.data.user.id))
+        .limit(1);
+
     return {
         status: 'SUCCESS',
         data: {
             linksData: linksResult,
-            profileImage: profileImage[0] || null
+            profileImage: profileImage[0] || null,
+            themes: themes as InAppTheme[],
+            currentThemeId: userSettings[0]?.themeId || null,
         }
     };
 });
@@ -272,6 +283,41 @@ const uploadProfileImage = createServerFn({ method: 'POST' })
         }
     });
 
+const updateSelectedTheme = createServerFn({ method: 'POST' }).validator(z.object({
+    themeId: z.string().min(1).max(100),
+})).handler(async (ctx) => {
+    const appSession = await useAppSession();
+    if (!appSession.data?.user) {
+        throw redirect({ to: '/Login', replace: true });
+    }
+
+    const { themeId } = ctx.data;
+    const db = dbClient();
+
+    // Check if user settings record exists
+    const existingRecord = await db.select()
+        .from(userSettingsTable)
+        .where(eq(userSettingsTable.userId, appSession.data.user.id))
+        .limit(1);
+
+    if (existingRecord.length > 0) {
+        // Update existing record
+        await db.update(userSettingsTable)
+            .set({ themeId })
+            .where(eq(userSettingsTable.userId, appSession.data.user.id));
+    } else {
+        // Insert new record
+        await db.insert(userSettingsTable).values({
+            userId: appSession.data.user.id,
+            themeId: themeId,
+        });
+    }
+
+    return {
+        status: 'SUCCESS'
+    };
+});
+
 type DashboardReducerAction =
     | { type: 'SET_FIELD'; payload: Partial<DashboardData> }
 
@@ -298,6 +344,7 @@ const initialData: DashboardData = {
     isSubmittingProfileImage: false,
     profilePicUrl: '',
     currentThemeId: '',
+    themes: [],
 };
 
 const reducer = (state: DashboardData, action: DashboardReducerAction): DashboardData => {
@@ -337,13 +384,7 @@ const validateFields = (data: DashboardData): Partial<LinksErrors> => {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-const inAppThemes: InAppTheme[] = [
-    { id: 'th_rose_fuchsia_sky', name: 'Theme 1', gradientClass: 'bg-gradient-to-tr from-rose-200 via-fuchsia-200 to-sky-200' },
-    { id: 'th_green_lime_yellow', name: 'Theme 2', gradientClass: 'bg-gradient-to-tr from-green-200 via-lime-200 to-yellow-200' },
-    { id: 'th_purple_pink_red', name: 'Theme 3', gradientClass: 'bg-gradient-to-tr from-purple-200 via-pink-200 to-red-200' },
-    { id: 'th_cyan_blue_indigo', name: 'Theme 4', gradientClass: 'bg-gradient-to-tr from-cyan-200 via-blue-200 to-indigo-200' },
-    { id: 'th_amber_orange_red', name: 'Theme 5', gradientClass: 'bg-gradient-to-tr from-amber-200 via-orange-200 to-red-200' },
-];
+const DEFAULT_THEME_CLASS = 'bg-gradient-to-br from-rose-200 via-fuchsia-200 to-sky-200';
 
 function RouteComponent() {
     const initialServerData = Route.useLoaderData();
@@ -353,7 +394,15 @@ function RouteComponent() {
 
     React.useEffect(() => {
         if (initialServerData.status === 'SUCCESS' && initialServerData.data) {
-            dispatch({ type: 'SET_FIELD', payload: { ...initialServerData.data.linksData, profilePicUrl: initialServerData.data.profileImage?.imageUrl || '' } });
+            dispatch({
+                type: 'SET_FIELD',
+                payload: {
+                    ...initialServerData.data.linksData,
+                    profilePicUrl: initialServerData.data.profileImage?.imageUrl || '',
+                    themes: initialServerData.data.themes || [],
+                    currentThemeId: initialServerData.data.currentThemeId || '',
+                }
+            });
         }
     }, [initialServerData]);
 
@@ -432,8 +481,28 @@ function RouteComponent() {
         });
     }, [inPageNotifications]);
 
+    const getCurrentTheme = useCallback(() => {
+        const currentTheme = state.themes.find(theme => theme.id === state.currentThemeId);
+        return currentTheme ? currentTheme.gradientClass : DEFAULT_THEME_CLASS;
+    }, [state.themes, state.currentThemeId]);
+
+    const handleThemeSelection = useCallback((themeId: string) => {
+        // Update local state immediately
+        dispatch({ type: 'SET_FIELD', payload: { currentThemeId: themeId } });
+
+        // Save to database in background
+        updateSelectedTheme({ data: { themeId } }).catch(error => {
+            console.error('Error saving theme selection:', error);
+            inPageNotifications.addNotification({
+                type: 'error',
+                message: 'Failed to save theme selection. Please try again.',
+                keepForever: true
+            });
+        });
+    }, [inPageNotifications]);
+
     return (
-        <Container>
+        <Container gradientClass={getCurrentTheme()}>
             <Menu user={routeContext.user} />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
                 <InPageNotifications />
@@ -464,18 +533,18 @@ function RouteComponent() {
                         />
                     </form>
                 </div>
-                {inAppThemes.length > 0 && (
+                {state.themes.length > 0 && (
                     <div className='flex flex-col items-center p-3 mt-6 border rounded-sm border-sm-slate-900 w-full max-w-md'>
                         <p className='text-lg font-medium text-gray-700'>Choose a Theme</p>
                         <div className='flex space-x-4 mt-2 bg-white p-3 rounded-sm'>
-                            {inAppThemes.map((theme) => {
+                            {state.themes.map((theme) => {
                                 const isSelected = theme.id === state.currentThemeId;
 
                                 return <div
                                     key={theme.id}
                                     className={`w-8 h-8 rounded-full cursor-pointer ${theme.gradientClass} border-2 hover:border-slate-900 ${isSelected ? 'border-slate-900' : 'border-transparent'}`}
                                     title={theme.name}
-                                    onClick={() => dispatch({ type: 'SET_FIELD', payload: { currentThemeId: theme.id } })}
+                                    onClick={() => handleThemeSelection(theme.id)}
                                 />
                             })}
                         </div>
