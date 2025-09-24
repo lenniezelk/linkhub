@@ -11,7 +11,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { useAppSession } from '@/lib/useAppSession';
 import { dbClient } from '@/lib/db/dbClient';
 import { linksTable, profileImagesTable } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { SocialLinkServerData } from '@/lib/types';
 import ProfileImage from '@/components/ProfileImage';
 
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/app/')({
             throw redirect({ to: '/app/createHandle' });
         }
     },
-    loader: () => fetchLinks(),
+    loader: () => fetchInitialData(),
 })
 
 const dashboardData = z.object({
@@ -126,7 +126,7 @@ const saveLinks = createServerFn({ method: 'POST' }).validator(dashboardData).ha
 });
 
 
-const fetchLinks = createServerFn({ method: 'GET' }).handler(async (ctx) => {
+const fetchInitialData = createServerFn({ method: 'GET' }).handler(async (ctx) => {
     const db = dbClient();
 
     const appSession = await useAppSession();
@@ -141,8 +141,14 @@ const fetchLinks = createServerFn({ method: 'GET' }).handler(async (ctx) => {
         linksData[link.type as keyof DashboardLinks] = link.url;
     });
 
+    const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, appSession.data.user.id)).orderBy(desc(profileImagesTable.createdAt)).limit(1);
+
     return {
-        status: 'SUCCESS', data: linksData as Partial<DashboardLinks>
+        status: 'SUCCESS',
+        data: {
+            linksData,
+            profileImage: profileImage[0] || null
+        }
     };
 });
 
@@ -313,7 +319,7 @@ const validateFields = (data: DashboardData): Partial<DashboardErrors> => {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 function RouteComponent() {
-    const links = Route.useLoaderData();
+    const initialServerData = Route.useLoaderData();
     const routeContext = Route.useRouteContext();
     const [state, dispatch] = React.useReducer(reducer, initialData);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -322,10 +328,13 @@ function RouteComponent() {
     const [isSubmittingProfileImage, setIsSubmittingProfileImage] = useState(false);
 
     React.useEffect(() => {
-        if (links.status === 'SUCCESS' && links.data) {
-            dispatch({ type: 'SET_FIELD', payload: links.data });
+        if (initialServerData.status === 'SUCCESS' && initialServerData.data) {
+            dispatch({ type: 'SET_FIELD', payload: initialServerData.data.linksData || {} });
+            if (initialServerData.data.profileImage) {
+                setProfilePicUrl(initialServerData.data.profileImage.imageUrl);
+            }
         }
-    }, [links]);
+    }, [initialServerData]);
 
     const submit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
