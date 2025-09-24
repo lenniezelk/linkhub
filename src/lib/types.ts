@@ -120,6 +120,7 @@ export type OtherDashboardData = {
     isSubmittingProfileImage: boolean;
     currentThemeId?: string;
     themes: InAppTheme[];
+    rootUrl: string;
 };
 
 export type DashboardData = LinksData & OtherDashboardData;

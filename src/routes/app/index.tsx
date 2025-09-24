@@ -14,6 +14,13 @@ import { linksTable, profileImagesTable, themesTable, userSettingsTable } from '
 import { asc, desc, eq } from 'drizzle-orm';
 import { DashboardData, InAppTheme, LinksData, linksData, LinksErrors, LinksOnly, SocialLinkServerData } from '@/lib/types';
 import ProfileImage from '@/components/ProfileImage';
+import { ExternalLink } from 'lucide-react';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Import icons
 import instagramIcon from '@/assets/icons/instagram.svg';
@@ -114,6 +121,7 @@ const fetchInitialData = createServerFn({ method: 'GET' }).handler(async () => {
             profileImage: profileImage[0] || null,
             themes: themes as InAppTheme[],
             currentThemeId: userSettings[0]?.themeId || null,
+            rootUrl: process.env.ROOT_URL || 'https://linkhub.link',
         }
     };
 });
@@ -288,6 +296,7 @@ const initialData: DashboardData = {
     profilePicUrl: '',
     currentThemeId: '',
     themes: [],
+    rootUrl: 'https://linkhub.link',
 };
 
 const reducer = (state: DashboardData, action: DashboardReducerAction): DashboardData => {
@@ -344,6 +353,7 @@ function RouteComponent() {
                     profilePicUrl: initialServerData.data.profileImage?.imageUrl || '',
                     themes: initialServerData.data.themes || [],
                     currentThemeId: initialServerData.data.currentThemeId || '',
+                    rootUrl: initialServerData.data.rootUrl || 'https://linkhub.link',
                 }
             });
         }
@@ -475,6 +485,24 @@ function RouteComponent() {
                             disabled={state.isSubmittingProfileImage}
                         />
                     </form>
+                </div>
+                <div className='mt-4 text-center text-gray-700'>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <a href={`${state.rootUrl}/p/${routeContext.user?.handle}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors">
+                                    <ExternalLink className='text-slate-700 h-5 w-5' />
+                                </a>
+                            </TooltipTrigger>
+                            <TooltipContent
+                                side="bottom"
+                                sideOffset={8}
+                                className="bg-slate-800 text-white px-3 py-2 rounded-md shadow-lg"
+                            >
+                                <p>Go to your public profile</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
                 {state.themes.length > 0 && (
                     <div className='flex flex-col items-center p-3 mt-6 border rounded-sm border-sm-slate-900 w-full max-w-md'>

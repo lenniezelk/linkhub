@@ -4,6 +4,7 @@ import appCss from '../styles.css?url'
 import { useAppSession } from '@/lib/useAppSession';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { InPageNotificationsProvider } from '@/components/InPageNotifications';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 
 // Devtools are dynamically imported only in development to avoid production build issues
@@ -78,9 +79,11 @@ function RootComponent() {
   return (
     <GoogleOAuthProvider clientId="659954519046-7f8jlgvqi1q6mqlgpgc92g2e8tca1tu1.apps.googleusercontent.com">
       <InPageNotificationsProvider>
-        <RootDocument>
-          <Outlet />
-        </RootDocument>
+        <TooltipProvider>
+          <RootDocument>
+            <Outlet />
+          </RootDocument>
+        </TooltipProvider>
       </InPageNotificationsProvider>
     </GoogleOAuthProvider>
   )
