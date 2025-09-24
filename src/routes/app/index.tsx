@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { z } from 'zod';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import { createServerFn } from '@tanstack/react-start';
@@ -12,7 +12,7 @@ import { useAppSession } from '@/lib/useAppSession';
 import { dbClient } from '@/lib/db/dbClient';
 import { linksTable, profileImagesTable } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
-import { SocialLinkServerData } from '@/lib/types';
+import { InAppTheme, SocialLinkServerData } from '@/lib/types';
 import ProfileImage from '@/components/ProfileImage';
 
 
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/app/')({
     loader: () => fetchInitialData(),
 })
 
-const dashboardData = z.object({
+const linksData = z.object({
     instagram: z.string().refine((val) => val === '' || (val.length >= 1 && val.length <= 30 && /^[a-zA-Z0-9._]+$/.test(val)), {
         message: "Instagram handle must be 1-30 characters and contain only letters, numbers, dots, and underscores"
     }).optional(),
@@ -68,10 +68,19 @@ const dashboardData = z.object({
     facebookError: z.string().optional(),
 });
 
-type DashboardData = z.infer<typeof dashboardData>;
+type LinksData = z.infer<typeof linksData>;
+
+type OtherDashboardData = {
+    profilePicUrl?: string;
+    isSubmitting: boolean;
+    isSubmittingProfileImage: boolean;
+    currentThemeId?: string;
+};
+
+type DashboardData = LinksData & OtherDashboardData;
 
 // Type for error fields only
-type DashboardErrors = {
+type LinksErrors = {
     instagramError?: string;
     twitterError?: string;
     githubError?: string;
@@ -84,9 +93,10 @@ type DashboardErrors = {
 };
 
 // Type for links data only (DashboardData without error fields)
-type DashboardLinks = Omit<DashboardData, keyof DashboardErrors>;
+// Type for links data only (LinksData without error fields)  
+type LinksOnly = Omit<LinksData, keyof LinksErrors>;
 
-const saveLinks = createServerFn({ method: 'POST' }).validator(dashboardData).handler(async (ctx) => {
+const saveLinks = createServerFn({ method: 'POST' }).validator(linksData).handler(async (ctx) => {
     const db = dbClient();
 
     const appSession = await useAppSession();
@@ -94,16 +104,18 @@ const saveLinks = createServerFn({ method: 'POST' }).validator(dashboardData).ha
         throw redirect({ to: '/Login', replace: true });
     }
 
-    const linksData = Object.keys(ctx.data).filter(key => !key.endsWith('Error')).reduce((obj, key) => {
-        obj[key as keyof DashboardLinks] = ctx.data[key as keyof DashboardData];
+    const filteredLinksData = Object.keys(ctx.data).filter(key => !key.endsWith('Error')).reduce((obj, key) => {
+        if (key in linksData.shape) {
+            obj[key as keyof LinksOnly] = ctx.data[key as keyof LinksData];
+        }
         return obj;
-    }, {} as DashboardLinks);
+    }, {} as Partial<LinksOnly>);
 
-    const insertData: SocialLinkServerData[] = Object.entries(linksData)
-        .filter(([_, value]) => value && value.trim() !== '')
+    const insertData: SocialLinkServerData[] = Object.entries(filteredLinksData)
+        .filter(([_, value]) => value && typeof value === 'string' && value.trim() !== '')
         .map(([key, value]) => {
-            let type = key as keyof DashboardLinks;
-            let url = value ? value.trim() : '';
+            let type = key as keyof LinksOnly;
+            let url = typeof value === 'string' ? value.trim() : '';
             return { type, url };
         });
 
@@ -126,7 +138,7 @@ const saveLinks = createServerFn({ method: 'POST' }).validator(dashboardData).ha
 });
 
 
-const fetchInitialData = createServerFn({ method: 'GET' }).handler(async (ctx) => {
+const fetchInitialData = createServerFn({ method: 'GET' }).handler(async () => {
     const db = dbClient();
 
     const appSession = await useAppSession();
@@ -136,9 +148,9 @@ const fetchInitialData = createServerFn({ method: 'GET' }).handler(async (ctx) =
 
     const links = await db.select().from(linksTable).where(eq(linksTable.userId, appSession.data.user.id));
 
-    const linksData: Partial<DashboardLinks> = {};
+    const linksResult: Partial<LinksOnly> = {};
     links.forEach(link => {
-        linksData[link.type as keyof DashboardLinks] = link.url;
+        linksResult[link.type as keyof LinksOnly] = link.url;
     });
 
     const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, appSession.data.user.id)).orderBy(desc(profileImagesTable.createdAt)).limit(1);
@@ -146,7 +158,7 @@ const fetchInitialData = createServerFn({ method: 'GET' }).handler(async (ctx) =
     return {
         status: 'SUCCESS',
         data: {
-            linksData,
+            linksData: linksResult,
             profileImage: profileImage[0] || null
         }
     };
@@ -282,6 +294,10 @@ const initialData: DashboardData = {
     pinterestError: '',
     facebook: '',
     facebookError: '',
+    isSubmitting: false,
+    isSubmittingProfileImage: false,
+    profilePicUrl: '',
+    currentThemeId: '',
 };
 
 const reducer = (state: DashboardData, action: DashboardReducerAction): DashboardData => {
@@ -297,20 +313,23 @@ const Prefix = ({ text }: { text?: string }) => <span className="font-mono text-
     {text ? text : '@'}
 </span>
 
-const validateField = (field: keyof DashboardData, value: string): string => {
-    const result = dashboardData.shape[field].safeParse(value.trim());
+const validateField = (field: keyof LinksData, value: string): string => {
+    const result = linksData.shape[field].safeParse(value.trim());
     return result.success ? '' : result.error.issues[0].message;
 };
 
-const validateFields = (data: DashboardData): Partial<DashboardErrors> => {
-    const errors: Partial<DashboardErrors> = {};
+const validateFields = (data: DashboardData): Partial<LinksErrors> => {
+    const errors: Partial<LinksErrors> = {};
     for (const key in data) {
-        if (key.endsWith('Error')) continue;
-        const fieldKey = key as keyof DashboardData;
-        const error = validateField(fieldKey, data[fieldKey] || '');
-        if (error) {
-            const errorKey = `${key}Error` as keyof DashboardErrors;
-            errors[errorKey] = error;
+        if (key.endsWith('Error') || !(key in linksData.shape)) continue;
+        const fieldKey = key as keyof LinksData;
+        const fieldValue = data[fieldKey];
+        if (typeof fieldValue === 'string') {
+            const error = validateField(fieldKey, fieldValue);
+            if (error) {
+                const errorKey = `${key}Error` as keyof LinksErrors;
+                errors[errorKey] = error;
+            }
         }
     }
     return errors;
@@ -318,27 +337,29 @@ const validateFields = (data: DashboardData): Partial<DashboardErrors> => {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+const inAppThemes: InAppTheme[] = [
+    { id: 'th_rose_fuchsia_sky', name: 'Theme 1', gradientClass: 'bg-gradient-to-tr from-rose-200 via-fuchsia-200 to-sky-200' },
+    { id: 'th_green_lime_yellow', name: 'Theme 2', gradientClass: 'bg-gradient-to-tr from-green-200 via-lime-200 to-yellow-200' },
+    { id: 'th_purple_pink_red', name: 'Theme 3', gradientClass: 'bg-gradient-to-tr from-purple-200 via-pink-200 to-red-200' },
+    { id: 'th_cyan_blue_indigo', name: 'Theme 4', gradientClass: 'bg-gradient-to-tr from-cyan-200 via-blue-200 to-indigo-200' },
+    { id: 'th_amber_orange_red', name: 'Theme 5', gradientClass: 'bg-gradient-to-tr from-amber-200 via-orange-200 to-red-200' },
+];
+
 function RouteComponent() {
     const initialServerData = Route.useLoaderData();
     const routeContext = Route.useRouteContext();
     const [state, dispatch] = React.useReducer(reducer, initialData);
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const inPageNotifications = useInPageNotifications();
-    const [profilePicUrl, setProfilePicUrl] = useState('');
-    const [isSubmittingProfileImage, setIsSubmittingProfileImage] = useState(false);
 
     React.useEffect(() => {
         if (initialServerData.status === 'SUCCESS' && initialServerData.data) {
-            dispatch({ type: 'SET_FIELD', payload: initialServerData.data.linksData || {} });
-            if (initialServerData.data.profileImage) {
-                setProfilePicUrl(initialServerData.data.profileImage.imageUrl);
-            }
+            dispatch({ type: 'SET_FIELD', payload: { ...initialServerData.data.linksData, profilePicUrl: initialServerData.data.profileImage?.imageUrl || '' } });
         }
     }, [initialServerData]);
 
     const submit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
+        dispatch({ type: 'SET_FIELD', payload: { isSubmitting: true } });
         inPageNotifications.clearNotifications();
 
         // Validate all fields
@@ -347,7 +368,7 @@ function RouteComponent() {
         if (hasErrors) {
             // If there are errors, update state with errors and do not submit
             dispatch({ type: 'SET_FIELD', payload: errors });
-            setIsSubmitting(false);
+            dispatch({ type: 'SET_FIELD', payload: { isSubmitting: false } });
             return;
         }
 
@@ -356,7 +377,7 @@ function RouteComponent() {
             .filter(key => !key.endsWith('Error'))
             .some(field => {
                 const value = state[field as keyof DashboardData];
-                return value && value.trim() !== '';
+                return typeof value === 'string' && value.trim() !== '';
             });
 
         if (!hasAtLeastOneLink) {
@@ -365,7 +386,7 @@ function RouteComponent() {
                 message: 'Please enter at least one social media link or website before submitting.',
                 keepForever: true
             });
-            setIsSubmitting(false);
+            dispatch({ type: 'SET_FIELD', payload: { isSubmitting: false } });
             return;
         }
 
@@ -379,14 +400,14 @@ function RouteComponent() {
             inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
             console.error('Error submitting links:', error);
         }).finally(() => {
-            setIsSubmitting(false);
+            dispatch({ type: 'SET_FIELD', payload: { isSubmitting: false } });
         });
     }, [state, inPageNotifications]);
 
     const submitProfileImage = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         inPageNotifications.clearNotifications();
-        setIsSubmittingProfileImage(true);
+        dispatch({ type: 'SET_FIELD', payload: { isSubmittingProfileImage: true } });
 
         const form = e.target as HTMLFormElement;
         const formData = new FormData(form);
@@ -394,10 +415,10 @@ function RouteComponent() {
         uploadProfileImage({ data: formData }).then((result) => {
             if (result.status === 'SUCCESS') {
                 if (result.data?.thumbnail) {
-                    setProfilePicUrl(result.data.thumbnail);
+                    dispatch({ type: 'SET_FIELD', payload: { profilePicUrl: result.data.thumbnail } });
                     inPageNotifications.addNotification({ type: 'success', message: 'Profile image uploaded successfully!' });
                 } else if (result.data?.original) {
-                    setProfilePicUrl(result.data.original);
+                    dispatch({ type: 'SET_FIELD', payload: { profilePicUrl: result.data.original } });
                     inPageNotifications.addNotification({ type: 'success', message: 'Profile image uploaded successfully!' });
                 }
             } else {
@@ -407,7 +428,7 @@ function RouteComponent() {
             inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
             console.error('Error uploading profile image:', error);
         }).finally(() => {
-            setIsSubmittingProfileImage(false);
+            dispatch({ type: 'SET_FIELD', payload: { isSubmittingProfileImage: false } });
         });
     }, [inPageNotifications]);
 
@@ -418,15 +439,15 @@ function RouteComponent() {
                 <InPageNotifications />
                 <div className='flex flex-col items-center px-4'>
                     <div className="w-[200px] h-[200px]">
-                        <ProfileImage imageUrl={profilePicUrl} />
+                        <ProfileImage imageUrl={state.profilePicUrl} />
                     </div>
                     <form noValidate className='mt-4' onSubmit={submitProfileImage} encType='multipart/form-data'>
                         <label
                             htmlFor="fileUpload"
                             className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm cursor-pointer hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            aria-disabled={isSubmittingProfileImage}
+                            aria-disabled={state.isSubmittingProfileImage}
                         >
-                            {isSubmittingProfileImage ? 'Uploading...' : 'Choose a Profile Image'}
+                            {state.isSubmittingProfileImage ? 'Uploading...' : 'Choose a Profile Image'}
                         </label>
                         <input
                             type="file"
@@ -439,10 +460,26 @@ function RouteComponent() {
                                     e.target.form?.requestSubmit();
                                 }
                             }}
-                            disabled={isSubmittingProfileImage}
+                            disabled={state.isSubmittingProfileImage}
                         />
                     </form>
                 </div>
+                {inAppThemes.length > 0 && (
+                    <div className='flex flex-col items-center p-3 mt-6 border rounded-sm border-sm-slate-900 w-full max-w-md'>
+                        <p className='text-lg font-medium text-gray-700'>Choose a Theme</p>
+                        <div className='flex space-x-4 mt-2 bg-white p-3 rounded-sm'>
+                            {inAppThemes.map((theme) => {
+                                const isSelected = theme.id === state.currentThemeId;
+
+                                return <div
+                                    key={theme.id}
+                                    className={`w-8 h-8 rounded-full cursor-pointer ${theme.gradientClass} border-2 hover:border-slate-900 ${isSelected ? 'border-slate-900' : 'border-transparent'}`}
+                                    title={theme.name}
+                                    onClick={() => dispatch({ type: 'SET_FIELD', payload: { currentThemeId: theme.id } })}
+                                />
+                            })}
+                        </div>
+                    </div>)}
                 <form noValidate className="mt-6 flex flex-col items-start gap-8 px-4 max-w-md w-full" onSubmit={submit}>
                     <div className='flex items-center w-full'>
                         <label htmlFor="instagram" className='mr-2 flex-shrink-0'>
@@ -588,7 +625,7 @@ function RouteComponent() {
                         />
                     </div>
                     <div className="w-full flex justify-center">
-                        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Submit'}</Button>
+                        <Button type="submit" disabled={state.isSubmitting}>{state.isSubmitting ? 'Submitting...' : 'Submit'}</Button>
                     </div>
                 </form>
             </main>

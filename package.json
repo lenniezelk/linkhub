@@ -28,7 +28,10 @@
     "generate-wrangler": "tsx scripts/generate-wrangler.ts",
     "clean": "rm -rf .output dist node_modules/.vite",
     "clean:all": "rm -rf .output dist node_modules/.vite .wrangler",
-    "reset": "pnpm clean:all && rm -rf node_modules pnpm-lock.yaml && pnpm install"
+    "reset": "pnpm clean:all && rm -rf node_modules pnpm-lock.yaml && pnpm install",
+    "db:local:execute": "wrangler d1 execute DB --local --file",
+    "db:prod:execute": "wrangler d1 execute DB --env production --remote --file",
+    "db:staging:execute": "wrangler d1 execute DB --env staging --remote --file"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",

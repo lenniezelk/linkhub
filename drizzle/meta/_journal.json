@@ -22,6 +22,20 @@
       "when": 1758619232824,
       "tag": "0002_thankful_rhodey",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1758704070666,
+      "tag": "0003_safe_scrambler",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1758709692556,
+      "tag": "0004_mean_dagger",
+      "breakpoints": true
     }
   ]
 }

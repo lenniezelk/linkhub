@@ -66,3 +66,9 @@ export type SocialLinkServerData = {
     type: SocialLinkType;
     url: string;
 };
+
+export interface InAppTheme {
+    id: string;
+    name: string;
+    gradientClass: string;
+}

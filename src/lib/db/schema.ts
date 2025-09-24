@@ -30,3 +30,20 @@ export const profileImagesTable = sqliteTable("profile_images", {
     requiresSignedUrl: integer({ mode: 'boolean' }).notNull().$default(() => true), // 0 = false, 1 = true
     createdAt: int("created_at", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
 });
+
+export const themesTable = sqliteTable("themes", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull().unique(),
+    gradientClass: text("gradient_class").notNull(), // e.g., 'bg-gradient-to-br from-rose-200 via-fuchsia-200 to-sky-200'
+    createdAt: int("created_at", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
+});
+
+export const userSettingsTable = sqliteTable("user_settings", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+        .notNull()
+        .references(() => usersTable.id, { onDelete: "cascade" }),
+    themeId: text("theme_id")
+        .references(() => themesTable.id, { onDelete: "set null" }),
+    createdAt: int("created_at", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
+});
