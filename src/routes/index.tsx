@@ -153,7 +153,7 @@ function RouteComponent() {
 
                     {/* Feature 3 */}
                     <div className="flex flex-col items-center text-center">
-                        <div className="relative w-full rounded-2xl border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                        <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                             <div className="aspect-[16/12] w-full">
                                 <EasySharing />
                             </div>
@@ -175,7 +175,7 @@ function RouteComponent() {
                 </div>
 
                 <div className="mt-10">
-                    <div className="relative w-full rounded-2xl border-white/70 bg-white/50 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                    <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                         <div className="aspect-[16/9] w-full">
                             <Testimonials />
                         </div>
