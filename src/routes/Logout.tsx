@@ -1,6 +1,7 @@
 import Container from '@/components/Container'
 import { useAppSession } from '@/lib/useAppSession';
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { googleLogout } from '@react-oauth/google';
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start';
 import { useEffect } from 'react';
 
@@ -14,12 +15,17 @@ const logout = createServerFn({ method: 'POST' }).handler(async (ctx) => {
 
     await appSession.clear();
 
-    throw redirect({ href: '/', replace: true });
+    return { status: 'SUCCESS' };
 });
 
 function RouteComponent() {
+    const navigate = useNavigate()
+
     useEffect(() => {
-        logout();
+        googleLogout();
+        logout().then(() => {
+            navigate({ to: '/', replace: true });
+        });
     }, []);
 
     return (
