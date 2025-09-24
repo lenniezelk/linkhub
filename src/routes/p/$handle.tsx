@@ -33,6 +33,18 @@ const iconsMap: Record<string, string> = {
     website: webIcon,
 };
 
+const socialLinksRootUrls: Record<string, string> = {
+    instagram: 'https://www.instagram.com/',
+    twitter: 'https://www.twitter.com/',
+    tiktok: 'https://www.tiktok.com/@',
+    pinterest: 'https://www.pinterest.com/',
+    youtube: 'https://www.youtube.com/',
+    facebook: 'https://www.facebook.com/',
+    linkedin: 'https://www.linkedin.com/in/',
+    github: 'https://www.github.com/',
+    website: '',
+};
+
 
 export const Route = createFileRoute('/p/$handle')({
     component: RouteComponent,
@@ -115,7 +127,7 @@ function RouteComponent() {
                         {linksWithUrls.map((linkType) => (
                             <a
                                 key={linkType}
-                                href={localData.linksData[linkType]}
+                                href={`${socialLinksRootUrls[linkType]}${localData.linksData[linkType]}`}
                                 className="flex items-center space-x-3 px-6 py-4 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all duration-200 w-full"
                                 target="_blank"
                                 rel="noopener noreferrer"
