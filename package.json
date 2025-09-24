@@ -44,7 +44,6 @@
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",
     "jose": "^6.1.0",
-    "primereact": "^10.9.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.0.6",

@@ -4,16 +4,16 @@ import Footer from '@/components/Footer';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { z } from 'zod';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import { createServerFn } from '@tanstack/react-start';
 import { useAppSession } from '@/lib/useAppSession';
 import { dbClient } from '@/lib/db/dbClient';
-import { linksTable } from '@/lib/db/schema';
+import { linksTable, profileImagesTable } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { SocialLinkServerData } from '@/lib/types';
-
+import ProfileImage from '@/components/ProfileImage';
 
 
 export const Route = createFileRoute('/app/')({
@@ -146,6 +146,113 @@ const fetchLinks = createServerFn({ method: 'GET' }).handler(async (ctx) => {
     };
 });
 
+const uploadProfileImage = createServerFn({ method: 'POST' })
+    .validator((formData: FormData) => {
+        if (!(formData instanceof FormData)) {
+            throw new Error('Invalid form data');
+        }
+        const file = formData.get('fileUpload');
+        if (!(file instanceof File)) {
+            throw new Error('No file uploaded');
+        }
+        if (file.size === 0) {
+            throw new Error('Uploaded file is empty');
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            throw new Error(`File size exceeds the maximum limit of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+        }
+        return file;
+    }).handler(async (ctx) => {
+        const appSession = await useAppSession();
+        if (!appSession.data?.user) {
+            throw redirect({ to: '/Login', replace: true });
+        }
+
+        const uploadUrl = `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/images/v1`;
+
+        // Create a new FormData for Cloudflare API
+        const cloudflareFormData = new FormData();
+        cloudflareFormData.append('file', ctx.data);
+        cloudflareFormData.append('requireSignedURLs', 'false');
+        cloudflareFormData.append('metadata', JSON.stringify({ creator: appSession.data.user.id }));
+
+        const response = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.CLOUDFLARE_STREAM_IMAGES_ANALYTICS_TOKEN}`,
+                // Don't set Content-Type for FormData - browser sets it automatically with boundary
+            },
+            body: cloudflareFormData
+        });
+
+        if (!response.ok) {
+            console.log('Cloudflare response not ok:', response.status, await response.text());
+            return {
+                status: 'ERROR',
+                message: `Image upload failed with status ${response.status}`
+            }
+        }
+
+        const data = await response.json() as {
+            success: boolean;
+            errors: any[];
+            messages: any[];
+            result: {
+                id: string;
+                filename: string;
+                uploaded: string;
+                requireSignedURLs: boolean;
+                variants: string[];
+                meta: Record<string, any>;
+            };
+        };
+
+        if (!data.success) {
+            return {
+                status: 'ERROR',
+                message: `Image upload failed: ${data.errors.map(e => e.message).join(', ')}`
+            }
+        }
+
+        if (data.result.variants.length === 0) {
+            return {
+                status: 'ERROR',
+                message: 'No image variants returned from Cloudflare'
+            }
+        }
+
+        const insertData = data.result.variants.map(variantUrl => ({
+            userId: appSession.data!.user!.id!,
+            imageUrl: variantUrl,
+            variant: variantUrl.includes('/thumbnail/') ? 'thumbnail' :
+                variantUrl.includes('/hero/') ? 'hero' : 'original',
+            requiresSignedUrl: false, // Changed to false since we're using public URLs
+        }));
+
+        const imageVariants: {
+            thumbnail?: string;
+            original?: string;
+            hero?: string;
+        } = {};
+
+        for (const item of insertData) {
+            if (item.variant === 'thumbnail') {
+                imageVariants.thumbnail = item.imageUrl;
+            } else if (item.variant === 'hero') {
+                imageVariants.hero = item.imageUrl;
+            } else if (item.variant === 'original') {
+                imageVariants.original = item.imageUrl;
+            }
+        }
+
+        const db = dbClient();
+        await db.delete(profileImagesTable).where(eq(profileImagesTable.userId, appSession.data.user.id));
+        await db.insert(profileImagesTable).values(insertData);
+
+        return {
+            status: 'SUCCESS', data: imageVariants
+        }
+    });
 
 type DashboardReducerAction =
     | { type: 'SET_FIELD'; payload: Partial<DashboardData> }
@@ -203,12 +310,16 @@ const validateFields = (data: DashboardData): Partial<DashboardErrors> => {
     return errors;
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 function RouteComponent() {
     const links = Route.useLoaderData();
     const routeContext = Route.useRouteContext();
     const [state, dispatch] = React.useReducer(reducer, initialData);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const inPageNotifications = useInPageNotifications();
+    const [profilePicUrl, setProfilePicUrl] = useState('');
+    const [isSubmittingProfileImage, setIsSubmittingProfileImage] = useState(false);
 
     React.useEffect(() => {
         if (links.status === 'SUCCESS' && links.data) {
@@ -263,11 +374,66 @@ function RouteComponent() {
         });
     }, [state, inPageNotifications]);
 
+    const submitProfileImage = useCallback((e: React.FormEvent) => {
+        e.preventDefault();
+        inPageNotifications.clearNotifications();
+        setIsSubmittingProfileImage(true);
+
+        const form = e.target as HTMLFormElement;
+        const formData = new FormData(form);
+
+        uploadProfileImage({ data: formData }).then((result) => {
+            if (result.status === 'SUCCESS') {
+                if (result.data?.thumbnail) {
+                    setProfilePicUrl(result.data.thumbnail);
+                    inPageNotifications.addNotification({ type: 'success', message: 'Profile image uploaded successfully!' });
+                } else if (result.data?.original) {
+                    setProfilePicUrl(result.data.original);
+                    inPageNotifications.addNotification({ type: 'success', message: 'Profile image uploaded successfully!' });
+                }
+            } else {
+                inPageNotifications.addNotification({ type: 'error', message: result.message, keepForever: true });
+            }
+        }).catch(error => {
+            inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
+            console.error('Error uploading profile image:', error);
+        }).finally(() => {
+            setIsSubmittingProfileImage(false);
+        });
+    }, [inPageNotifications]);
+
     return (
         <Container>
             <Menu user={routeContext.user} />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
                 <InPageNotifications />
+                <div className='flex flex-col items-center px-4'>
+                    <div className="w-[200px] h-[200px]">
+                        <ProfileImage imageUrl={profilePicUrl} />
+                    </div>
+                    <form noValidate className='mt-4' onSubmit={submitProfileImage} encType='multipart/form-data'>
+                        <label
+                            htmlFor="fileUpload"
+                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm cursor-pointer hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            aria-disabled={isSubmittingProfileImage}
+                        >
+                            {isSubmittingProfileImage ? 'Uploading...' : 'Choose a Profile Image'}
+                        </label>
+                        <input
+                            type="file"
+                            id="fileUpload"
+                            name="fileUpload"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                    e.target.form?.requestSubmit();
+                                }
+                            }}
+                            disabled={isSubmittingProfileImage}
+                        />
+                    </form>
+                </div>
                 <form noValidate className="mt-6 flex flex-col items-start gap-8 px-4 max-w-md w-full" onSubmit={submit}>
                     <div className='flex items-center w-full'>
                         <label htmlFor="instagram" className='mr-2 flex-shrink-0'>

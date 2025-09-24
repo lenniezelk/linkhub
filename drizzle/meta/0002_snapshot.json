@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d80af211-a85d-4b41-8f74-f57b0acc72e7",
-  "prevId": "62c3cc86-c554-415c-91ba-6203da06ad33",
+  "id": "baf62753-5df4-4c1f-a8af-d05024f9224b",
+  "prevId": "d80af211-a85d-4b41-8f74-f57b0acc72e7",
   "tables": {
     "links": {
       "name": "links",
@@ -48,6 +48,72 @@
         "links_user_id_users_id_fk": {
           "name": "links_user_id_users_id_fk",
           "tableFrom": "links",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "profile_images": {
+      "name": "profile_images",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "variant": {
+          "name": "variant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "requiresSignedUrl": {
+          "name": "requiresSignedUrl",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "profile_images_user_id_users_id_fk": {
+          "name": "profile_images_user_id_users_id_fk",
+          "tableFrom": "profile_images",
           "tableTo": "users",
           "columnsFrom": [
             "user_id"

@@ -19,3 +19,14 @@ export const linksTable = sqliteTable("links", {
     url: text("url").notNull(),
     createdAt: int("created_at", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
 });
+
+export const profileImagesTable = sqliteTable("profile_images", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+        .notNull()
+        .references(() => usersTable.id, { onDelete: "cascade" }),
+    imageUrl: text("image_url").notNull(),
+    variant: text("variant").notNull(), // e.g., 'thumbnail', 'hero', 'original', etc.
+    requiresSignedUrl: integer({ mode: 'boolean' }).notNull().$default(() => true), // 0 = false, 1 = true
+    createdAt: int("created_at", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
+});

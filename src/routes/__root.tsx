@@ -46,7 +46,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'LinkHub | Home',
       },
     ],
     links: [
@@ -58,7 +58,7 @@ export const Route = createRootRoute({
   }),
 
   shellComponent: RootComponent,
-    beforeLoad: async () => {
+  beforeLoad: async () => {
     const result = await fetchMe();
 
     if (result.status === 'ERROR') {
@@ -75,15 +75,15 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
-    return (
-        <GoogleOAuthProvider clientId="659954519046-7f8jlgvqi1q6mqlgpgc92g2e8tca1tu1.apps.googleusercontent.com">
-                <InPageNotificationsProvider>
-                    <RootDocument>
-                        <Outlet />
-                    </RootDocument>
-                </InPageNotificationsProvider>
-        </GoogleOAuthProvider>
-    )
+  return (
+    <GoogleOAuthProvider clientId="659954519046-7f8jlgvqi1q6mqlgpgc92g2e8tca1tu1.apps.googleusercontent.com">
+      <InPageNotificationsProvider>
+        <RootDocument>
+          <Outlet />
+        </RootDocument>
+      </InPageNotificationsProvider>
+    </GoogleOAuthProvider>
+  )
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
