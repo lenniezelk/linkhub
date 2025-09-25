@@ -7,8 +7,9 @@ import { InAppTheme, LinksOnly } from '@/lib/types';
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start';
 import { asc, desc, eq } from 'drizzle-orm';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { z } from 'zod';
+import { Share2 } from 'lucide-react';
 
 // Import icons
 import instagramIcon from '@/assets/icons/instagram.svg';
@@ -20,6 +21,8 @@ import facebookIcon from '@/assets/icons/facebook.svg';
 import linkedinIcon from '@/assets/icons/linkedin.svg';
 import githubIcon from '@/assets/icons/github.svg';
 import webIcon from '@/assets/icons/web.svg';
+import { TooltipContent, TooltipTrigger, Tooltip } from '@/components/ui/tooltip';
+import { RedditShare } from 'react-share-kit';
 
 const iconsMap: Record<string, string> = {
     instagram: instagramIcon,
@@ -84,6 +87,7 @@ const fetchInitialData = createServerFn({ method: 'GET' }).validator(z.object({ 
             profileImage: profileImage[0] || null,
             themes: themes as InAppTheme[],
             currentThemeId: userSettings[0]?.themeId || null,
+            rootUrl: process.env.ROOT_URL || 'https://linkhub.link'
         }
     };
 });
@@ -105,6 +109,23 @@ const linksOnlyValues: (keyof LinksOnly)[] = [
 function RouteComponent() {
     const data = Route.useLoaderData();
     const localData = data.data
+    const routeContext = Route.useRouteContext();
+    const [FacebookShare, setFacebookShare] = useState<any>(null);
+    const [TwitterShare, setTwitterShare] = useState<any>(null);
+    const [PinterestShare, setPinterestShare] = useState<any>(null);
+    const [RedditShare, setRedditShare] = useState<any>(null);
+    const [EmailShare, setEmailShare] = useState<any>(null);
+
+    useEffect(() => {
+        // Dynamically import the FacebookShare component only on client side
+        import("react-share-kit").then((module) => {
+            setFacebookShare(() => module.FacebookShare);
+            setTwitterShare(() => module.TwitterShare);
+            setPinterestShare(() => module.PinterestShare);
+            setRedditShare(() => module.RedditShare);
+            setEmailShare(() => module.EmailShare);
+        });
+    }, []);
 
     const getCurrentTheme = useCallback(() => {
         const currentTheme = localData.themes.find(theme => theme.id === localData.currentThemeId);
@@ -112,12 +133,43 @@ function RouteComponent() {
     }, [localData.themes, localData.currentThemeId]);
 
     const linksWithUrls = useMemo(() => linksOnlyValues.filter(linkType => localData.linksData[linkType]), [localData.linksData]);
+    const shareTitle = useMemo(() => "View my latest content on LinkHub!", []);
+    const handleLink = useMemo(() => `${localData.rootUrl}/p/${routeContext.user?.handle}`, [localData.rootUrl, routeContext.user?.handle]);
+
+    const shareButtonCommonProps = useMemo(() => ({
+        url: handleLink,
+        size: 32,
+        round: true,
+        title: shareTitle
+    }), [handleLink, shareTitle]);
 
     return (
         <Container gradientClass={getCurrentTheme()}>
             <Menu />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
-                <div className='flex flex-col items-center px-4'>
+                <div className='mt-4 flex justify-end w-full max-w-md px-4'>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className='cursor-pointer rounded-full p-2 bg-transparent hover:bg-white hover:bg-opacity-80 transition-all duration-200 inline-flex items-center justify-center'>
+                                <Share2 className='w-6 h-6' />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent
+                            side="bottom"
+                            sideOffset={8}
+                            className=" bg-white text-white px-3 py-2 rounded-md shadow-lg"
+                        >
+                            <div className='flex gap-2'>
+                                {FacebookShare && <FacebookShare {...shareButtonCommonProps} />}
+                                {TwitterShare && <TwitterShare {...shareButtonCommonProps} />}
+                                {PinterestShare && <PinterestShare {...shareButtonCommonProps} />}
+                                {RedditShare && <RedditShare {...shareButtonCommonProps} />}
+                                {EmailShare && <EmailShare {...shareButtonCommonProps} />}
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+                <div className='flex flex-col items-center px-4 mt-6'>
                     <div className="w-[200px] h-[200px]">
                         <ProfileImage imageUrl={localData.profileImage.imageUrl} />
                     </div>
