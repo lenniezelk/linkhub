@@ -23,6 +23,7 @@ import githubIcon from '@/assets/icons/github.svg';
 import webIcon from '@/assets/icons/web.svg';
 import { TooltipContent, TooltipTrigger, Tooltip } from '@/components/ui/tooltip';
 import { RedditShare } from 'react-share-kit';
+import CopyToClipboard from '@/components/CopyToClipboard';
 
 const iconsMap: Record<string, string> = {
     instagram: instagramIcon,
@@ -165,6 +166,7 @@ function RouteComponent() {
                                 {PinterestShare && <PinterestShare {...shareButtonCommonProps} />}
                                 {RedditShare && <RedditShare {...shareButtonCommonProps} />}
                                 {EmailShare && <EmailShare {...shareButtonCommonProps} />}
+                                <CopyToClipboard text={handleLink} />
                             </div>
                         </TooltipContent>
                     </Tooltip>
