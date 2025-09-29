@@ -1,6 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start';
 import appCss from '../styles.css?url'
+import logoSvg from '../assets/logo.svg?url'
 import { useAppSession } from '@/lib/useAppSession';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { InPageNotificationsProvider } from '@/components/InPageNotifications';
@@ -55,6 +56,11 @@ export const Route = createRootRoute({
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: logoSvg,
       },
     ],
   }),
