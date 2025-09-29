@@ -22,7 +22,6 @@ import linkedinIcon from '@/assets/icons/linkedin.svg';
 import githubIcon from '@/assets/icons/github.svg';
 import webIcon from '@/assets/icons/web.svg';
 import { TooltipContent, TooltipTrigger, Tooltip } from '@/components/ui/tooltip';
-import { RedditShare } from 'react-share-kit';
 import CopyToClipboard from '@/components/CopyToClipboard';
 
 const iconsMap: Record<string, string> = {

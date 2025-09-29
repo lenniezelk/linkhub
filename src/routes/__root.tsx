@@ -30,7 +30,6 @@ if (import.meta.env.DEV) {
 
 export const fetchMe = createServerFn({ method: 'GET' }).handler(async () => {
   const session = await useAppSession();
-  console.log('Session in fetchMe:', session.data);
   if (!session.data?.user) {
     return { status: 'ERROR', error: 'Not authenticated' };
   }

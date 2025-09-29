@@ -96,7 +96,7 @@ function Menu({ context }: MenuProps) {
                         </NavigationMenuItem>
                     )}
 
-                    {user && !pathname.toLowerCase().startsWith('/app') && (
+                    {user && pathname.toLowerCase() !== "/app" && (
                         <NavigationMenuItem>
                             <NavigationMenuLink asChild className={cn(
                                 "inline-flex items-center rounded-full bg-slate-900 px-4 py-1.5 text-base font-semibold text-white shadow hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400",
