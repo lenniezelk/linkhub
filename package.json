@@ -34,6 +34,7 @@
     "db:staging:execute": "wrangler d1 execute DB --env staging --remote --file"
   },
   "dependencies": {
+    "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-oauth/google": "^0.12.2",
     "@rive-app/react-canvas": "^4.23.3",
