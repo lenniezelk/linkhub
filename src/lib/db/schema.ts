@@ -27,7 +27,7 @@ export const profileImagesTable = sqliteTable("profile_images", {
         .references(() => usersTable.id, { onDelete: "cascade" }),
     imageUrl: text("image_url").notNull(),
     variant: text("variant").notNull(), // e.g., 'thumbnail', 'hero', 'original', etc.
-    requiresSignedUrl: integer({ mode: 'boolean' }).notNull().$default(() => true), // 0 = false, 1 = true
+    requiresSignedUrl: integer({ mode: 'boolean' }).notNull().$default(() => false), // 0 = false, 1 = true
     createdAt: int("created_at", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
 });
 
