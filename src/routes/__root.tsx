@@ -29,11 +29,12 @@ if (import.meta.env.DEV) {
 
 export const fetchMe = createServerFn({ method: 'GET' }).handler(async () => {
   const session = await useAppSession();
+  console.log('Session in fetchMe:', session.data);
   if (!session.data?.user) {
     return { status: 'ERROR', error: 'Not authenticated' };
   }
 
-  return { status: 'SUCCESS', data: { user: session.data.user } };
+  return { status: 'SUCCESS', data: { user: session.data.user, userProfile: session.data.userProfile } };
 });
 
 export const Route = createRootRoute({
@@ -70,6 +71,7 @@ export const Route = createRootRoute({
 
     return {
       user: result.data.user,
+      userProfile: result.data.userProfile,
     }
   },
   notFoundComponent: () => <div>404 - Not Found</div>,

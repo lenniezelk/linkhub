@@ -13,12 +13,17 @@ import { cn } from "@/lib/utils";
 import ProfileImage from "./ProfileImage";
 import { useState } from "react";
 
-interface MenuProps {
+interface MenuContext {
     user?: User | null;
-    userProfile?: UserProfile
+    userProfile?: UserProfile | null;
 }
 
-function Menu({ user, userProfile }: MenuProps) {
+interface MenuProps {
+    context?: MenuContext;
+}
+
+function Menu({ context }: MenuProps) {
+    const { user, userProfile } = context || {};
     const { location: { pathname } } = useRouterState();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

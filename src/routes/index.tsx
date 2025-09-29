@@ -29,7 +29,7 @@ function RouteComponent() {
     return (
         <Container>
             {/* Top navigation */}
-            <Menu user={routeContext.user} />
+            <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
 
             {/* Hero section 1 */}
             <section className="mt-12 grid min-h-[calc(100vh-6rem)] grid-cols-1 content-center gap-8 md:grid-cols-2 md:items-center">

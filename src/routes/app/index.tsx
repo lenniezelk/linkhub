@@ -456,7 +456,7 @@ function RouteComponent() {
 
     return (
         <Container gradientClass={getCurrentTheme()}>
-            <Menu user={routeContext.user} />
+            <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
                 <InPageNotifications />
                 <div className='mt-4 flex justify-end w-full max-w-md px-4'>
