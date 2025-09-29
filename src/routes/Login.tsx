@@ -9,11 +9,11 @@ import Footer from '@/components/Footer';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
-import { GoogleAuthData, LoginData, LoginFormData, User } from '@/lib/types';
+import { GoogleAuthData, InAppTheme, LoginData, LoginFormData, User } from '@/lib/types';
 import { validateEmail, validateHandle } from '@/lib/validation';
 import { useAppSession } from '@/lib/useAppSession';
 import { verifyPassword } from '@/lib/auth';
-import { usersTable } from '@/lib/db/schema';
+import { profileImagesTable, themesTable, userSettingsTable, usersTable } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { dbClient } from '@/lib/db/dbClient';
 import { createServerFn } from '@tanstack/react-start';
@@ -112,6 +112,22 @@ export const login = createServerFn({ method: 'POST' }).validator(LoginFormData)
         }
     }
 
+    // fetch user profile
+    let selectedTheme: InAppTheme | undefined;
+    let profileImageUrl: string | undefined;
+    const userSettings = await db.select().from(userSettingsTable).where(eq(userSettingsTable.userId, user.id)).limit(1);
+    if (userSettings.length > 0 && userSettings[0].themeId) {
+        const theme = await db.select().from(themesTable).where(eq(themesTable.id, userSettings[0].themeId)).limit(1);
+        if (theme.length > 0) {
+            selectedTheme = theme[0];
+        }
+    }
+
+    const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, user.id)).limit(1);
+    if (profileImage.length > 0) {
+        profileImageUrl = profileImage[0].imageUrl;
+    }
+
     const session = await useAppSession();
     await session.update({
         user: {
@@ -119,7 +135,16 @@ export const login = createServerFn({ method: 'POST' }).validator(LoginFormData)
             email: user.email,
             name: user.name,
             handle: user.handle,
+            emailVerified: user.emailVerified,
         },
+        userProfile: {
+            theme: selectedTheme ? {
+                id: selectedTheme.id,
+                name: selectedTheme.name,
+                gradientClass: selectedTheme.gradientClass,
+            } : undefined,
+            profilePicture: profileImageUrl,
+        }
     });
 
     return {
@@ -140,6 +165,22 @@ export const loginGoogle = createServerFn({ method: 'POST' }).validator(GoogleAu
         }
     }
 
+    // fetch user profile
+    let selectedTheme: InAppTheme | undefined;
+    let profileImageUrl: string | undefined;
+    const userSettings = await db.select().from(userSettingsTable).where(eq(userSettingsTable.userId, existingUser[0].id)).limit(1);
+    if (userSettings.length > 0 && userSettings[0].themeId) {
+        const theme = await db.select().from(themesTable).where(eq(themesTable.id, userSettings[0].themeId)).limit(1);
+        if (theme.length > 0) {
+            selectedTheme = theme[0];
+        }
+    }
+
+    const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, existingUser[0].id)).limit(1);
+    if (profileImage.length > 0) {
+        profileImageUrl = profileImage[0].imageUrl;
+    }
+
     const session = await useAppSession();
     await session.update({
         user: {
@@ -147,7 +188,16 @@ export const loginGoogle = createServerFn({ method: 'POST' }).validator(GoogleAu
             email: existingUser[0].email,
             name: existingUser[0].name,
             handle: existingUser[0].handle,
+            emailVerified: existingUser[0].emailVerified,
         },
+        userProfile: {
+            theme: selectedTheme ? {
+                id: selectedTheme.id,
+                name: selectedTheme.name,
+                gradientClass: selectedTheme.gradientClass,
+            } : undefined,
+            profilePicture: profileImageUrl,
+        }
     });
 
     return { status: 'SUCCESS' };

@@ -11,12 +11,12 @@ import Footer from '@/components/Footer';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
-import { GoogleAuthData, type SignupData, SignupFormData } from '@/lib/types';
+import { GoogleAuthData, InAppTheme, type SignupData, SignupFormData } from '@/lib/types';
 import { isConfirmPasswordValid, isEmailValid, isHandleValid, isNameValid, isPasswordValid, validateEmail, validateHandle, validatePassword } from '@/lib/validation';
 // import { signUp, signUpGoogle } from '@/server/auth';
 import { useAppSession } from '@/lib/useAppSession';
 import { hashPassword } from '@/lib/auth';
-import { usersTable } from '@/lib/db/schema';
+import { profileImagesTable, themesTable, userSettingsTable, usersTable } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { dbClient } from '@/lib/db/dbClient';
 import { createServerFn } from '@tanstack/react-start';
@@ -105,6 +105,22 @@ export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormDat
 
     const users = await db.insert(usersTable).values({ ...userData, passwordHash: await hashPassword(userData.password) }).returning();
 
+    // fetch user profile
+    let selectedTheme: InAppTheme | undefined;
+    let profileImageUrl: string | undefined;
+    const userSettings = await db.select().from(userSettingsTable).where(eq(userSettingsTable.userId, users[0].id)).limit(1);
+    if (userSettings.length > 0 && userSettings[0].themeId) {
+        const theme = await db.select().from(themesTable).where(eq(themesTable.id, userSettings[0].themeId)).limit(1);
+        if (theme.length > 0) {
+            selectedTheme = theme[0];
+        }
+    }
+
+    const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, users[0].id)).limit(1);
+    if (profileImage.length > 0) {
+        profileImageUrl = profileImage[0].imageUrl;
+    }
+
     const session = await useAppSession();
     await session.update({
         user: {
@@ -112,7 +128,16 @@ export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormDat
             email: users[0].email,
             name: users[0].name,
             handle: users[0].handle,
+            emailVerified: users[0].emailVerified,
         },
+        userProfile: {
+            theme: selectedTheme ? {
+                id: selectedTheme.id,
+                name: selectedTheme.name,
+                gradientClass: selectedTheme.gradientClass,
+            } : undefined,
+            profilePicture: profileImageUrl,
+        }
     });
 
     return {
@@ -142,6 +167,22 @@ export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleA
         emailVerified: userData.emailVerified || false,
     }).returning();
 
+    // fetch user profile
+    let selectedTheme: InAppTheme | undefined;
+    let profileImageUrl: string | undefined;
+    const userSettings = await db.select().from(userSettingsTable).where(eq(userSettingsTable.userId, users[0].id)).limit(1);
+    if (userSettings.length > 0 && userSettings[0].themeId) {
+        const theme = await db.select().from(themesTable).where(eq(themesTable.id, userSettings[0].themeId)).limit(1);
+        if (theme.length > 0) {
+            selectedTheme = theme[0];
+        }
+    }
+
+    const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, users[0].id)).limit(1);
+    if (profileImage.length > 0) {
+        profileImageUrl = profileImage[0].imageUrl;
+    }
+
     const session = await useAppSession();
     await session.update({
         user: {
@@ -149,7 +190,16 @@ export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleA
             email: users[0].email,
             name: users[0].name,
             handle: users[0].handle,
+            emailVerified: users[0].emailVerified,
         },
+        userProfile: {
+            theme: selectedTheme ? {
+                id: selectedTheme.id,
+                name: selectedTheme.name,
+                gradientClass: selectedTheme.gradientClass,
+            } : undefined,
+            profilePicture: profileImageUrl,
+        }
     });
 
     return { status: 'SUCCESS' };

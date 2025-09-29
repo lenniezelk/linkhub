@@ -1,12 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Logo } from "@/components/Logo";
-import { User } from "@/lib/types";
+import { User, UserProfile } from "@/lib/types";
 
 interface MenuProps {
     user?: User | null;
+    userProfile?: UserProfile
 }
 
-function Menu({ user }: MenuProps) {
+function Menu({ user, userProfile }: MenuProps) {
     const { location: { pathname } } = useRouterState();
 
     return (
@@ -19,9 +20,9 @@ function Menu({ user }: MenuProps) {
 
             {/* Menu (right) */}
             <div className="flex items-center gap-4">
-                <a href="#" className="text-lg font-medium text-slate-800 hover:text-slate-950">
+                <Link to="/Pricing" className="text-lg font-medium text-slate-800 hover:text-slate-950">
                     Pricing
-                </a>
+                </Link>
                 {!user && (
                     <Link to="/Login" className="text-lg font-medium text-slate-800 hover:text-slate-950">
                         Login

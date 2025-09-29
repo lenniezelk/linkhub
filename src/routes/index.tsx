@@ -103,12 +103,12 @@ function RouteComponent() {
                     </p>
 
                     <div className="mt-6">
-                        <a
-                            href="#"
+                        <Link
+                            to="/Signup"
                             className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-base font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
                         >
                             Start for free
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </section>

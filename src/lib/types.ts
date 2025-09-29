@@ -14,6 +14,7 @@ export interface User {
     email: string;
     name: string;
     handle: string | null;
+    emailVerified: boolean | null;
 }
 
 export const SignupFormData = z.object({
@@ -49,9 +50,14 @@ export interface LoginFormData {
     password: string;
 }
 
+export interface UserProfile {
+    theme?: InAppTheme;
+    profilePicture?: string;
+}
+
 export interface AppSession {
     user: User | null;
-    token: string | null;
+    userProfile?: UserProfile;
 }
 
 export const HandleFormData = z.object({
