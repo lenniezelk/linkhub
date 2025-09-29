@@ -7,33 +7,33 @@ export const Route = createFileRoute('/Pricing')({
   component: RouteComponent,
 })
 
+const features = {
+  free: [
+    'Up to 5 custom links',
+    'Basic analytics',
+    'Standard themes',
+    'LinkHub subdomain',
+    'Mobile responsive',
+    'Basic customization'
+  ],
+  paid: [
+    'Unlimited custom links',
+    'Advanced analytics & insights',
+    'Premium themes & custom CSS',
+    'Custom domain connection',
+    'Priority support',
+    'Advanced customization',
+    'QR code generation',
+    'Link scheduling',
+    'Bulk link management',
+    'API access',
+    'Team collaboration',
+    'White-label branding'
+  ]
+}
+
 function RouteComponent() {
   const routeContext = Route.useRouteContext();
-
-  const features = {
-    free: [
-      'Up to 5 custom links',
-      'Basic analytics',
-      'Standard themes',
-      'LinkHub subdomain',
-      'Mobile responsive',
-      'Basic customization'
-    ],
-    paid: [
-      'Unlimited custom links',
-      'Advanced analytics & insights',
-      'Premium themes & custom CSS',
-      'Custom domain connection',
-      'Priority support',
-      'Advanced customization',
-      'QR code generation',
-      'Link scheduling',
-      'Bulk link management',
-      'API access',
-      'Team collaboration',
-      'White-label branding'
-    ]
-  }
 
   return (
     <Container>
