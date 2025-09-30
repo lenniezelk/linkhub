@@ -84,16 +84,9 @@ function RouteComponent() {
                 </div>
             </section>
 
-            {/* Hero section 2 (swapped) */}
+            {/* Hero section 2 */}
             <section className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-center py-12">
-                {/* Left: Rive placeholder */}
-                <div className="relative border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
-                    <div className="aspect-[16/12] w-full">
-                        <Share />
-                    </div>
-                </div>
-
-                {/* Right: copy + CTA */}
+                {/* Left: copy + CTA */}
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                         Share everything with a single link
@@ -111,6 +104,13 @@ function RouteComponent() {
                         </Link>
                     </div>
                 </div>
+
+                {/* Right: Rive placeholder */}
+                <div className="relative border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                    <div className="aspect-[16/12] w-full">
+                        <Share />
+                    </div>
+                </div>
             </section>
 
             {/* Features section */}
@@ -124,44 +124,44 @@ function RouteComponent() {
                     </p>
                 </div>
 
-                <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-10 grid grid-cols-1 gap-12 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
                     {/* Feature 1 */}
                     <div className="flex flex-col items-center text-center">
+                        <h3 className="mb-4 text-lg font-semibold text-slate-900">All your links</h3>
+                        <p className="mb-4 text-sm text-slate-700 max-w-sm">
+                            Collect links to content, products, and profiles in one place.
+                        </p>
                         <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                             <div className="aspect-[16/12] w-full">
                                 <AllLinks />
                             </div>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-slate-900">All your links</h3>
-                        <p className="mt-1 text-sm text-slate-700 max-w-sm">
-                            Collect links to content, products, and profiles in one place.
-                        </p>
                     </div>
 
                     {/* Feature 2 */}
                     <div className="flex flex-col items-center text-center">
+                        <h3 className="mb-4 text-lg font-semibold text-slate-900">Telemetry & graphs</h3>
+                        <p className="mb-4 text-sm text-slate-700 max-w-sm">
+                            Track clicks and engagement with real‑time charts and insights.
+                        </p>
                         <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                             <div className="aspect-[16/12] w-full">
                                 <Telemetry />
                             </div>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-slate-900">Telemetry & graphs</h3>
-                        <p className="mt-1 text-sm text-slate-700 max-w-sm">
-                            Track clicks and engagement with real‑time charts and insights.
-                        </p>
                     </div>
 
                     {/* Feature 3 */}
                     <div className="flex flex-col items-center text-center">
+                        <h3 className="mb-4 text-lg font-semibold text-slate-900">Easy sharing</h3>
+                        <p className="mb-4 text-sm text-slate-700 max-w-sm">
+                            Share your link anywhere—bio, posts, videos, and more.
+                        </p>
                         <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                             <div className="aspect-[16/12] w-full">
                                 <EasySharing />
                             </div>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-slate-900">Easy sharing</h3>
-                        <p className="mt-1 text-sm text-slate-700 max-w-sm">
-                            Share your link anywhere—bio, posts, videos, and more.
-                        </p>
                     </div>
                 </div>
             </section>
