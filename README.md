@@ -16,20 +16,52 @@
 
 ## Overview
 
-LinkHub provides user signup/login (local + OAuth via Google), handle claiming, and a foundation for storing and presenting user-centric link/profile data (extensible). It leverages Cloudflare's edge runtime for fast global performance, a D1 database for persistence, and modern React 19 with TanStack Router for file‑based routing and progressive enhancement.
+LinkHub is a modern social link aggregation platform that allows users to create personalized profile pages with their social media links, contact information, and custom themes. Built with React 19 and deployed on Cloudflare Workers for global edge performance.
+
+**Current Features:**
+- User authentication (email/password + Google OAuth)
+- Personalized profile pages (`linkhub.com/l/username`)
+- Social media link management (Instagram, Twitter, LinkedIn, etc.)
+- Profile image upload and management
+- Custom themes and styling
+- Email verification system
+- Account management dashboard
+- Responsive design with modern UI components
 
 ## Key Features
 
-- React 19 + TanStack React Start (SSR + streaming)
-- File-based routing via `@tanstack/react-router`
-- Cloudflare Workers deployment (`wrangler`), edge‑compatible code (no Node‑only APIs)
-- D1 (SQLite) database with Drizzle ORM & migrations
-- Secure password hashing (PBKDF2 via WebCrypto) + JWT auth (JOSE)
-- Google OAuth (via `@react-oauth/google`)
-- Tailwind CSS v4 for styling
-- Biome for linting/formatting
-- Type-safe environment bindings in dev using `wrangler` platform proxy
-- Rive animations (`@rive-app/react-canvas`)
+### 🚀 Core Platform
+- **React 19** + TanStack React Start (SSR + streaming)
+- **File-based routing** via `@tanstack/react-router`
+- **Cloudflare Workers** deployment for global edge performance
+- **Type-safe development** with TypeScript 5.7
+
+### 🔐 Authentication & Security
+- **Secure password hashing** (PBKDF2 with 100k iterations)
+- **JWT-based sessions** with 7-day expiration
+- **Google OAuth integration** for seamless signup
+- **Email verification** system
+- **Password complexity requirements** (letters, numbers, special characters)
+
+### 📊 Data & Storage
+- **D1 (SQLite)** database with Drizzle ORM
+- **Automatic migrations** and schema management
+- **Profile image storage** with multiple variants
+- **Custom themes** and user preferences
+- **Social link management** across platforms
+
+### 🎨 UI & Design
+- **Tailwind CSS 4** for modern styling
+- **Responsive design** for all devices
+- **Custom theme system** with gradient backgrounds
+- **Rive animations** for enhanced UX
+- **Component-based architecture** with reusable UI elements
+
+### 🛠️ Developer Experience
+- **Biome** for linting and formatting
+- **Vitest** for testing
+- **Type-safe environment** bindings
+- **Hot module replacement** in development
 
 ## Tech Stack
 
@@ -43,20 +75,40 @@ LinkHub provides user signup/login (local + OAuth via Google), handle claiming, 
 | Styling | Tailwind CSS 4 |
 | Dev Tooling | Vite 6, Biome, Vitest, TypeScript 5.7 |
 
-## Monorepo / Structure Snapshot
+## Project Structure
 
 ```
 src/
-  routes/           # File-based routes (SSR aware)
-  components/       # Reusable UI components
+  routes/              # File-based routes (SSR aware)
+    app.account.tsx     # Account management dashboard
+    app.create-handle.tsx # Handle claiming
+    app.index.tsx       # Main dashboard
+    auth.login.tsx      # Login page
+    auth.signup.tsx     # Registration page
+    l.$handle.tsx       # Public profile pages
+    pricing.tsx         # Pricing information
+  components/          # Reusable UI components
+    Button.tsx
+    Input.tsx
+    ProfileImageEdit.tsx
+    SectionHeading.tsx
+    EmailVerification.tsx
+    # ... and more
   lib/
-    auth.ts         # Hashing + JWT helpers
-    cf_bindings.ts  # Edge env bindings loader (dev vs prod)
-    db/             # Drizzle client + schema
-  styles.css        # Tailwind entry
-drizzle/            # Generated SQL migrations + journal
-drizzle.config.ts   # Drizzle kit configuration
-wrangler.jsonc      # Cloudflare Worker + env bindings
+    auth.ts            # Password hashing + JWT helpers
+    cf_bindings.ts     # Edge environment bindings
+    db/
+      dbClient.ts      # Database connection
+      schema.ts        # Database schema definitions
+    types.ts           # Shared TypeScript types
+    validation.ts      # Form validation schemas
+  api/                 # Server-side API functions
+    profile/           # Profile management APIs
+  assets/              # Static assets (images, icons)
+  styles.css           # Tailwind CSS entry point
+drizzle/              # Database migrations
+public/               # Public assets
+wrangler.jsonc        # Cloudflare Worker configuration
 ```
 
 ## Quick Start (Local Development)
@@ -88,20 +140,47 @@ CLOUDFLARE_D1_TOKEN=cf_d1_api_token
 
 Never commit real production secrets to version control. Rotate any secrets appearing in history before launch.
 
-## Database (D1 + Drizzle)
+## Database Schema
 
 Schema file: `src/lib/db/schema.ts`
 
-Current tables:
+### Current Tables:
 
-- `users`
-  - `id` (UUID primary key)
-  - `email` (unique, required)
-  - `name` (required)
-  - `password_hash` (nullable for OAuth users)
-  - `handle` (unique, optional)
-  - `created_at` (timestamp)
-  - `emailVerified` (boolean)
+**`users`** - User accounts and authentication
+- `id` (UUID primary key)
+- `email` (unique, required)
+- `name` (required)
+- `password_hash` (nullable for OAuth users)
+- `handle` (unique, optional - claimed separately)
+- `created_at` (timestamp)
+- `emailVerified` (boolean)
+
+**`links`** - Social media and external links
+- `id` (UUID primary key)
+- `user_id` (foreign key to users)
+- `type` (platform: instagram, twitter, linkedin, etc.)
+- `url` (link URL)
+- `created_at` (timestamp)
+
+**`profile_images`** - User profile pictures
+- `id` (UUID primary key)
+- `user_id` (foreign key to users)
+- `image_url` (image location)
+- `variant` (thumbnail, original, etc.)
+- `requires_signed_url` (boolean)
+- `created_at` (timestamp)
+
+**`themes`** - Available visual themes
+- `id` (UUID primary key)
+- `name` (theme name)
+- `gradient_class` (CSS class for styling)
+- `created_at` (timestamp)
+
+**`user_settings`** - User preferences
+- `id` (UUID primary key)
+- `user_id` (foreign key to users)
+- `theme_id` (foreign key to themes)
+- `created_at` (timestamp)
 
 ### Migrations Workflow
 
@@ -240,15 +319,54 @@ pnpm deploy:prod
 
 Ensure migrations are applied / safe before production deployment. Consider manual approval for prod DB changes.
 
-## Future Roadmap (Ideas)
+## Current Status & Roadmap
 
-- User link collections & ordering
-- Public profile pages with analytics (click counts)
-- Email verification workflow
-- Password reset & session revocation
-- Rate limiting / abuse protection (KV or R2 + durable object token bucket)
-- Audit logging (open telemetry / analytics events)
-- Theming & custom domains
+### ✅ Completed Features
+- User registration and authentication
+- Google OAuth integration
+- Profile page creation and management
+- Social link management
+- Profile image upload
+- Theme customization
+- Email verification
+- Account settings dashboard
+- Responsive design
+- Password security requirements
+
+### 🚧 In Development
+- Enhanced analytics for profile views
+- Custom domain support
+- Advanced theming options
+- Link click tracking
+
+### 📋 Future Roadmap
+- **Advanced Analytics**
+  - Detailed click tracking and insights
+  - Visitor analytics and demographics
+  - Performance metrics dashboard
+
+- **Customization & Branding**
+  - Custom CSS support
+  - Brand color customization
+  - Logo upload and positioning
+  - Advanced layout options
+
+- **Social Features**
+  - Profile discovery
+  - Featured profiles
+  - Social sharing improvements
+
+- **Enterprise Features**
+  - Team management
+  - Bulk operations
+  - Advanced permissions
+  - White-label solutions
+
+- **Integrations**
+  - API for third-party integrations
+  - Webhook support
+  - Social media auto-sync
+  - Analytics platform integrations
 
 ## License
 
