@@ -66,7 +66,7 @@ function RouteComponent() {
                                 </span>
                             </div>
                             <Link
-                                to={`/Signup`}
+                                to={`/auth/signup`}
                                 className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
                                 search={{ handle }}
                             >
@@ -104,7 +104,7 @@ function RouteComponent() {
 
                     <div className="mt-6">
                         <Link
-                            to="/Signup"
+                            to="/auth/signup"
                             className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-base font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
                         >
                             Start for free
