@@ -14,6 +14,11 @@ function Footer() {
                     <Link to="/pricing" className="text-sm font-medium text-slate-800 hover:text-slate-950">Pricing</Link>
                 </nav>
             </div>
+            <div className="mt-4 text-center">
+                <p className="text-xs text-slate-600">
+                    All icons and trademarks are the property of their respective owners.
+                </p>
+            </div>
         </footer>
     )
 }
