@@ -1,10 +1,15 @@
 <div align="center">
-  <img src="public/logo512.png" alt="LinkHub Logo" width="120" />
+  <img src="src/assets/logo.svg" alt="LinkHub Logo" width="120" />
   
   # LinkHub
   <strong>Unified personal hub for managing, sharing, and showcasing your digital presence.</strong>
   <br />
   <em>Built on Cloudflare Workers + TanStack React Start + Drizzle ORM (D1)</em>
+  
+  <br />
+  <br />
+  
+  🚀 **[View Live Production Site](https://linkhub-2-production.lkioi.workers.dev/)**
 </div>
 
 ---
