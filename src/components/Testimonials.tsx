@@ -180,6 +180,7 @@ function Testimonials() {
                     data.testimonials.forEach((testimonial, index) => {
                         if (!testimonial.decodedImageData) {
                             testimonial.decodedImageData = decodedImages[index]
+                            testimonial.decodedImageData.unref()
                         }
                     })
                 }
