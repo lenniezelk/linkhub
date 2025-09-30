@@ -1,12 +1,15 @@
 import updateUser from '@/api/profile/updateUser';
 import uploadProfileImage from '@/api/profile/uploadProfileImage';
+import verifyEmail from '@/api/profile/verifyEmail';
 import Button from '@/components/Button';
 import Container from '@/components/Container';
+import EmailVerification from '@/components/EmailVerification';
 import Footer from '@/components/Footer';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
 import ProfileImageEdit from '@/components/ProfileImageEdit';
+import SectionHeading from '@/components/SectionHeading';
 import { dbClient } from '@/lib/db/dbClient';
 import { profileImagesTable, usersTable } from '@/lib/db/schema';
 import { useAppSession } from '@/lib/useAppSession';
@@ -50,20 +53,29 @@ const fetchInitialData = createServerFn({ method: 'GET' }).handler(async () => {
       profilePicture: profileImage.length > 0 ? profileImage[0].imageUrl : null,
       canChangeEmail: dbUser[0].passwordHash !== null, // Only allow email change if user has a password set (i.e., not OAuth-only user)
       canChangePassword: dbUser[0].passwordHash !== null, // Only allow password change if user has a password set
+      emailVerified: sessionUser.emailVerified || false,
     }
   };
 });
 
-const ProfileData = z.object({
+const ProfileDataShape = z.object({
   email: z.string().email(),
-  name: z.string().refine((val) => val === '' || (val.length >= 3 && val.length <= 100), {
+  confirmEmail: z.string().email(),
+  name: z.string().refine((val) => (val.length >= 3 && val.length <= 100), {
     message: "Name must be 3-100 characters long"
   }),
-  handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
-  password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]/), // Optional password field
+  handle: z.string().refine((val) => (val.length >= 3 && val.length <= 20 && /^[a-zA-Z0-9_]+$/.test(val)), {
+    message: "Handle must be 3-20 characters and contain only letters, numbers, and underscores"
+  }),
+  password: z.string().refine((val) => val.length >= 8 && /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&+\-_=.,;:'"\[\]{}()]*$/.test(val), {
+    message: "Password must be more than 8 characters long and contain at least one letter and one number, and may include special characters"
+  }),
+  confirmPassword: z.string().refine((val) => val.length >= 8 && /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&+\-_=.,;:'"\[\]{}()]*$/.test(val), {
+    message: "Password must be more than 8 characters long and contain at least one letter and one number, and may include special characters"
+  })
 });
 
-type ProfileData = z.infer<typeof ProfileData>;
+type ProfileData = z.infer<typeof ProfileDataShape>;
 
 interface State {
   name: string;
@@ -75,17 +87,17 @@ interface State {
   emailVerified: boolean;
   verifyEmailCodeSent: boolean;
   isSendingVerifyEmailCode: boolean;
-  currentEmail: string;
-  confirmNewEmail: string;
-  newEmail: string;
+  email: string;
+  confirmEmail: string;
   emailError: string;
+  confirmEmailError: string;
   isSubmittingEmail: boolean;
   canChangeEmail: boolean;
   canChangePassword: boolean;
   passwordError: string;
-  currentPassword: string;
-  newPassword: string;
-  confirmNewPassword: string;
+  password: string;
+  confirmPassword: string;
+  confirmPasswordError: string;
   isSubmittingPassword: boolean;
   profilePicUrl: string | null;
   isSubmittingProfileImage: boolean;
@@ -101,17 +113,17 @@ const initialState: State = {
   emailVerified: false,
   verifyEmailCodeSent: false,
   isSendingVerifyEmailCode: false,
-  currentEmail: '',
-  confirmNewEmail: '',
-  newEmail: '',
+  confirmEmail: '',
+  email: '',
   emailError: '',
+  confirmEmailError: '',
   isSubmittingEmail: false,
   canChangeEmail: false,
   canChangePassword: false,
   passwordError: '',
-  currentPassword: '',
-  newPassword: '',
-  confirmNewPassword: '',
+  password: '',
+  confirmPassword: '',
+  confirmPasswordError: '',
   isSubmittingPassword: false,
   profilePicUrl: null,
   isSubmittingProfileImage: false,
@@ -133,7 +145,7 @@ const reducer = (state: State, action: ReducerAction): State => {
 };
 
 function validateField(field: keyof ProfileData, value: string): string {
-  const result = ProfileData.shape[field].safeParse(value);
+  const result = ProfileDataShape.shape[field].safeParse(value);
   return result.success ? '' : result.error.errors[0].message;
 }
 
@@ -192,13 +204,33 @@ function RouteComponent() {
       return;
     }
 
+    if (field === 'email') {
+      const confirmEmailError = validateField('confirmEmail', state.confirmEmail);
+      if (confirmEmailError) {
+        dispatch({ type: 'SET_VALUE', payload: { confirmEmailError } });
+        return;
+      }
+    }
+
+    if (field === 'password') {
+      const confirmPasswordError = validateField('confirmPassword', state.confirmPassword);
+      if (confirmPasswordError) {
+        dispatch({ type: 'SET_VALUE', payload: { confirmPasswordError } });
+        return;
+      }
+    }
+
     dispatch({ type: 'SET_VALUE', payload: { [`isSubmitting${field.charAt(0).toUpperCase() + field.slice(1)}`]: true, [`${field}Error`]: '' } });
 
     updateUser({ data: { [field]: value } }).then((result) => {
       if (result.status === 'SUCCESS') {
+        if (field === 'email') {
+          dispatch({ type: 'SET_VALUE', payload: { emailVerified: false } });
+        }
+
         inPageNotifications.addNotification({ type: 'success', message: `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully!` });
       } else {
-        inPageNotifications.addNotification({ type: 'error', message: `Failed to update ${field}.`, keepForever: true });
+        inPageNotifications.addNotification({ type: 'error', message: result.error, keepForever: true });
       }
     }).catch(_ => {
       inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
@@ -206,6 +238,33 @@ function RouteComponent() {
       dispatch({ type: 'SET_VALUE', payload: { [`isSubmitting${field.charAt(0).toUpperCase() + field.slice(1)}`]: false } });
     });
   }, [inPageNotifications]);
+
+  const validateConfirmEmail = useCallback((value: string): string => {
+    const result = ProfileDataShape.shape.confirmEmail.safeParse(value.trim());
+    return result.success ? state.email === value.trim() ? '' : 'Emails do not match' : 'Invalid email format';
+  }, [state.email]);
+
+  const doEmailVerification = useCallback(async () => {
+    dispatch({ type: 'SET_VALUE', payload: { isSendingVerifyEmailCode: true } });
+
+    verifyEmail().then((result) => {
+      if (result.status === 'SUCCESS') {
+        dispatch({ type: 'SET_VALUE', payload: { verifyEmailCodeSent: true, emailVerified: true } });
+        inPageNotifications.addNotification({ type: 'success', message: 'Verification email sent! Please check your inbox.' });
+      } else {
+        inPageNotifications.addNotification({ type: 'error', message: result.message, keepForever: true });
+      }
+    }).catch(_ => {
+      inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
+    }).finally(() => {
+      dispatch({ type: 'SET_VALUE', payload: { isSendingVerifyEmailCode: false } });
+    });
+  }, [inPageNotifications]);
+
+  const validateConfirmPassword = useCallback((value: string): string => {
+    const result = ProfileDataShape.shape.confirmPassword.safeParse(value.trim());
+    return result.success ? state.password === value.trim() ? '' : 'Passwords do not match' : 'Password must be at least 8 characters, including letters and numbers';
+  }, [state.password]);
 
   return (
     <Container>
@@ -220,6 +279,7 @@ function RouteComponent() {
             isSubmittingProfileImage={state.isSubmittingProfileImage}
           />
         </div>
+        <SectionHeading title="Update Your Name" />
         <form noValidate className="mt-8 flex flex-col items-start gap-8 px-4 max-w-md w-full" onSubmit={(e) => { e.preventDefault(); updateUserField('name', state.name); }}>
           <div className='flex items-center w-full'>
             <Input
@@ -235,6 +295,86 @@ function RouteComponent() {
             <Button type="submit" disabled={state.isSubmittingName}>{state.isSubmittingName ? 'Submitting...' : 'Submit Name'}</Button>
           </div>
         </form>
+        <SectionHeading title="Update Your Handle/Username" />
+        <form noValidate className="mt-8 flex flex-col items-start gap-8 px-4 max-w-md w-full" onSubmit={(e) => { e.preventDefault(); updateUserField('handle', state.handle); }}>
+          <div className='flex items-center w-full'>
+            <Input
+              type="text"
+              name="handle"
+              placeholder="Enter your handle/username"
+              value={state.handle}
+              error={state.handleError}
+              onChange={(e) => dispatch({ type: 'SET_VALUE', payload: { handle: e.target.value, handleError: validateField('handle', e.target.value) } })}
+            />
+          </div>
+          <div className="w-full flex justify-center">
+            <Button type="submit" disabled={state.isSubmittingHandle}>{state.isSubmittingHandle ? 'Submitting...' : 'Submit Handle'}</Button>
+          </div>
+        </form>
+        <SectionHeading title="Update Your Email" />
+        {state.canChangeEmail ? (<form noValidate className="mt-8 flex flex-col items-start gap-8 px-4 max-w-md w-full" onSubmit={(e) => { e.preventDefault(); updateUserField('email', state.email); }}>
+          <div className='flex items-center w-full'>
+            <Input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={state.email}
+              error={state.emailError}
+              onChange={(e) => dispatch({ type: 'SET_VALUE', payload: { email: e.target.value, emailError: validateField('email', e.target.value) } })}
+            />
+          </div>
+          <div className='flex items-center w-full'>
+            <Input
+              type="email"
+              name="confirmEmail"
+              placeholder="Re-enter your email"
+              value={state.confirmEmail}
+              error={state.confirmEmailError}
+              onChange={(e) => dispatch({ type: 'SET_VALUE', payload: { confirmEmail: e.target.value, confirmEmailError: validateConfirmEmail(e.target.value) } })}
+            />
+          </div>
+          <div className="w-full flex justify-center">
+            <Button type="submit" disabled={state.isSubmittingEmail}>{state.isSubmittingEmail ? 'Submitting...' : 'Submit Email'}</Button>
+          </div>
+        </form>) : (
+          <p className="mt-4 text-gray-600">Your account was created using a different authentication method. Email change is not available for your account.</p>
+        )}
+        <SectionHeading title="Verify Your Email" />
+        <div className='flex items-center w-full max-w-md'>
+          <EmailVerification
+            emailVerified={state.emailVerified}
+            onVerifyEmail={doEmailVerification}
+            sendingVerification={state.isSendingVerifyEmailCode}
+          />
+        </div>
+        <SectionHeading title="Change Password" />
+        {state.canChangePassword ? (<form noValidate className="mt-8 flex flex-col items-start gap-8 px-4 max-w-md w-full" onSubmit={(e) => { e.preventDefault(); updateUserField('password', state.password); }}>
+          <div className='flex items-center w-full'>
+            <Input
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={state.password}
+              error={state.passwordError}
+              onChange={(e) => dispatch({ type: 'SET_VALUE', payload: { password: e.target.value, passwordError: validateField('password', e.target.value) } })}
+            />
+          </div>
+          <div className='flex items-center w-full'>
+            <Input
+              type="password"
+              name="confirmPassword"
+              placeholder="Re-enter your password"
+              value={state.confirmPassword}
+              error={state.confirmPasswordError}
+              onChange={(e) => dispatch({ type: 'SET_VALUE', payload: { confirmPassword: e.target.value, confirmPasswordError: validateConfirmPassword(e.target.value) } })}
+            />
+          </div>
+          <div className="w-full flex justify-center">
+            <Button type="submit" disabled={state.isSubmittingPassword}>{state.isSubmittingPassword ? 'Submitting...' : 'Submit Password'}</Button>
+          </div>
+        </form>) : (
+          <p className="mt-4 text-gray-600">Your account was created using a different authentication method. Password change is not available for your account.</p>
+        )}
       </main>
       <Footer />
     </Container>

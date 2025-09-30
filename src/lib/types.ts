@@ -20,14 +20,14 @@ export interface User {
 export const CreateUserData = z.object({
     handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
     email: z.string().email(),
-    password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]/),
+    password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&+\-_=.,;:'"\[\]{}()]/),
     name: z.string().min(3).max(100),
 });
 
 export const UpdateUserData = z.object({
     handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/).optional(),
     email: z.string().email().optional(),
-    password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]/).optional(),
+    password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&+\-_=.,;:'"\[\]{}()]/).optional(),
     name: z.string().min(3).max(100).optional(),
 });
 
