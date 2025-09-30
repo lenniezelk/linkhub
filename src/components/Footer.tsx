@@ -1,4 +1,5 @@
 import { Logo } from "@/components/Logo";
+import { Link } from "@tanstack/react-router";
 
 function Footer() {
     return (
@@ -10,9 +11,7 @@ function Footer() {
                     <span className="text-sm text-slate-700">© {new Date().getFullYear()} LinkHub</span>
                 </div>
                 <nav className="flex items-center gap-4">
-                    <a href="#" className="text-sm font-medium text-slate-800 hover:text-slate-950">Pricing</a>
-                    <a href="#" className="text-sm font-medium text-slate-800 hover:text-slate-950">Docs</a>
-                    <a href="#" className="text-sm font-medium text-slate-800 hover:text-slate-950">Contact</a>
+                    <Link to="/pricing" className="text-sm font-medium text-slate-800 hover:text-slate-950">Pricing</Link>
                 </nav>
             </div>
         </footer>

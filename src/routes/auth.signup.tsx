@@ -1,5 +1,5 @@
 import { type CredentialResponse, GoogleLogin } from '@react-oauth/google';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
 import * as jose from 'jose';
 import * as React from 'react';
@@ -11,12 +11,12 @@ import Footer from '@/components/Footer';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
-import { GoogleSignupData, type SignupData, SignupFormData } from '@/lib/types';
-import { validateEmail, validateHandle, validatePassword } from '@/lib/validation';
+import { GoogleAuthData, InAppTheme, type SignupData, CreateUserData } from '@/lib/types';
+import { isConfirmPasswordValid, isEmailValid, isHandleValid, isNameValid, isPasswordValid } from '@/lib/validation';
 // import { signUp, signUpGoogle } from '@/server/auth';
 import { useAppSession } from '@/lib/useAppSession';
 import { hashPassword } from '@/lib/auth';
-import { usersTable } from '@/lib/db/schema';
+import { profileImagesTable, themesTable, userSettingsTable, usersTable } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { dbClient } from '@/lib/db/dbClient';
 import { createServerFn } from '@tanstack/react-start';
@@ -26,7 +26,7 @@ const signupSearchSchema = z.object({
     handle: z.string().optional(),
 });
 
-export const Route = createFileRoute('/Signup')({
+export const Route = createFileRoute('/auth/signup')({
     head: () => ({
         meta: [
             {
@@ -38,7 +38,7 @@ export const Route = createFileRoute('/Signup')({
     validateSearch: zodValidator(signupSearchSchema),
     beforeLoad: async ({ context }) => {
         if (context.user) {
-            return { redirect: '/app' };
+            throw redirect({ to: '/app' });
         }
     },
 })
@@ -79,39 +79,9 @@ const reducer = (state: SignupForm, action: SignupFormReducerActions): SignupFor
     }
 }
 
-const isEmpty = (str: string) => !str || str.trim() === ''
 
-const isEmailValid = (email: string) => {
-    if (isEmpty(email)) return 'Email is required'
-    if (!validateEmail(email)) return 'Email is invalid'
-    return ''
-}
 
-const isPasswordValid = (password: string) => {
-    if (isEmpty(password)) return 'Password is required'
-    if (!validatePassword(password)) return 'Password must be at least 8 characters long and contain at least one letter and one number'
-    return ''
-}
-
-const isConfirmPasswordValid = (password: string, confirmPassword: string) => {
-    if (isEmpty(confirmPassword)) return 'Please confirm your password'
-    if (password !== confirmPassword) return 'Passwords do not match'
-    return ''
-}
-
-const isHandleValid = (handle: string) => {
-    if (isEmpty(handle)) return 'Handle is required'
-    if (!validateHandle(handle)) return 'Handle must be 3-20 characters long and can only contain letters, numbers, and underscores'
-    return ''
-}
-
-const isNameValid = (name: string) => {
-    if (isEmpty(name)) return 'Name is required'
-    if (name.length < 3 || name.length > 100) return 'Name must be between 3 and 100 characters long'
-    return ''
-}
-
-export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormData).handler(async (ctx) => {
+export const signUp = createServerFn({ method: 'POST' }).validator(CreateUserData).handler(async (ctx) => {
     const db = dbClient();
     const userData = ctx.data;
 
@@ -135,6 +105,22 @@ export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormDat
 
     const users = await db.insert(usersTable).values({ ...userData, passwordHash: await hashPassword(userData.password) }).returning();
 
+    // fetch user profile
+    let selectedTheme: InAppTheme | undefined;
+    let profileImageUrl: string | undefined;
+    const userSettings = await db.select().from(userSettingsTable).where(eq(userSettingsTable.userId, users[0].id)).limit(1);
+    if (userSettings.length > 0 && userSettings[0].themeId) {
+        const theme = await db.select().from(themesTable).where(eq(themesTable.id, userSettings[0].themeId)).limit(1);
+        if (theme.length > 0) {
+            selectedTheme = theme[0];
+        }
+    }
+
+    const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, users[0].id)).limit(1);
+    if (profileImage.length > 0) {
+        profileImageUrl = profileImage[0].imageUrl;
+    }
+
     const session = await useAppSession();
     await session.update({
         user: {
@@ -142,7 +128,16 @@ export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormDat
             email: users[0].email,
             name: users[0].name,
             handle: users[0].handle,
+            emailVerified: users[0].emailVerified,
         },
+        userProfile: {
+            theme: selectedTheme ? {
+                id: selectedTheme.id,
+                name: selectedTheme.name,
+                gradientClass: selectedTheme.gradientClass,
+            } : undefined,
+            profilePicture: profileImageUrl,
+        }
     });
 
     return {
@@ -152,7 +147,7 @@ export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormDat
 
 })
 
-export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleSignupData).handler(async (ctx) => {
+export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleAuthData).handler(async (ctx) => {
     const db = dbClient();
     const userData = ctx.data;
 
@@ -172,6 +167,22 @@ export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleS
         emailVerified: userData.emailVerified || false,
     }).returning();
 
+    // fetch user profile
+    let selectedTheme: InAppTheme | undefined;
+    let profileImageUrl: string | undefined;
+    const userSettings = await db.select().from(userSettingsTable).where(eq(userSettingsTable.userId, users[0].id)).limit(1);
+    if (userSettings.length > 0 && userSettings[0].themeId) {
+        const theme = await db.select().from(themesTable).where(eq(themesTable.id, userSettings[0].themeId)).limit(1);
+        if (theme.length > 0) {
+            selectedTheme = theme[0];
+        }
+    }
+
+    const profileImage = await db.select().from(profileImagesTable).where(eq(profileImagesTable.userId, users[0].id)).limit(1);
+    if (profileImage.length > 0) {
+        profileImageUrl = profileImage[0].imageUrl;
+    }
+
     const session = await useAppSession();
     await session.update({
         user: {
@@ -179,7 +190,16 @@ export const signUpGoogle = createServerFn({ method: 'POST' }).validator(GoogleS
             email: users[0].email,
             name: users[0].name,
             handle: users[0].handle,
+            emailVerified: users[0].emailVerified,
         },
+        userProfile: {
+            theme: selectedTheme ? {
+                id: selectedTheme.id,
+                name: selectedTheme.name,
+                gradientClass: selectedTheme.gradientClass,
+            } : undefined,
+            profilePicture: profileImageUrl,
+        }
     });
 
     return { status: 'SUCCESS' };
@@ -191,6 +211,7 @@ function RouteComponent() {
     const { handle: initialHandle } = Route.useSearch()
     const navigate = useNavigate()
     const inPageNotifications = useInPageNotifications();
+    const routeContext = Route.useRouteContext();
 
     useEffect(() => {
         if (initialHandle) {
@@ -221,10 +242,10 @@ function RouteComponent() {
 
         signUp({
             data: {
-                handle: state.handle,
-                email: state.email,
-                password: state.password,
-                name: state.name
+                handle: state.handle.trim(),
+                email: state.email.trim(),
+                password: state.password.trim(),
+                name: state.name.trim()
             }
         }).then((result) => {
             if (result.status === 'SUCCESS') {
@@ -233,7 +254,7 @@ function RouteComponent() {
             } else {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }
-    }).catch((_error) => {
+        }).catch((_error) => {
             inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred. Please try again later.', keepForever: true });
         }).finally(() => {
             setIsSubmitting(false);
@@ -246,11 +267,11 @@ function RouteComponent() {
         signUpGoogle({ data: userInfo }).then((result) => {
             if (result.status === 'SUCCESS') {
                 inPageNotifications.addNotification({ type: 'success', message: 'Account created successfully! Redirecting...', keepForever: true });
-                navigate({ to: '/app/createHandle', replace: true });
+                navigate({ to: '/app/create-handle', replace: true });
             } else {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }
-    }).catch((_error) => {
+        }).catch((_error) => {
             inPageNotifications.addNotification({ type: 'error', message: 'An unexpected error occurred during Google signup. Please try again later.', keepForever: true });
         });
     }, [inPageNotifications, navigate]);
@@ -261,7 +282,7 @@ function RouteComponent() {
 
     return (
         <Container>
-            <Menu />
+            <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
                 <InPageNotifications />
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center">

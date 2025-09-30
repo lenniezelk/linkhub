@@ -24,11 +24,12 @@ export const Route = createFileRoute('/')({
 
 function RouteComponent() {
     const [handle, setHandle] = useState('')
+    const routeContext = Route.useRouteContext();
 
     return (
         <Container>
             {/* Top navigation */}
-            <Menu />
+            <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
 
             {/* Hero section 1 */}
             <section className="mt-12 grid min-h-[calc(100vh-6rem)] grid-cols-1 content-center gap-8 md:grid-cols-2 md:items-center">
@@ -102,12 +103,12 @@ function RouteComponent() {
                     </p>
 
                     <div className="mt-6">
-                        <a
-                            href="#"
+                        <Link
+                            to="/Signup"
                             className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-base font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
                         >
                             Start for free
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -152,7 +153,7 @@ function RouteComponent() {
 
                     {/* Feature 3 */}
                     <div className="flex flex-col items-center text-center">
-                        <div className="relative w-full rounded-2xl border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                        <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                             <div className="aspect-[16/12] w-full">
                                 <EasySharing />
                             </div>
@@ -174,7 +175,7 @@ function RouteComponent() {
                 </div>
 
                 <div className="mt-10">
-                    <div className="relative w-full rounded-2xl border-white/70 bg-white/50 shadow-sm ring-1 ring-white/50 backdrop-blur">
+                    <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                         <div className="aspect-[16/9] w-full">
                             <Testimonials />
                         </div>

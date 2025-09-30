@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `themes_name_unique` ON `themes` (`name`);

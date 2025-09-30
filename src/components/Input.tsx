@@ -10,7 +10,7 @@ function Input(props: InputProps) {
     // If a prefix is provided and consumer didn't already add left padding, we keep existing padding.
     // Consumers can still override via className (as done for handle field with pl-[14ch]).
     return (
-        <div>
+        <div className="w-full">
             <div className={inputPrefix ? 'relative' : undefined}>
                 {inputPrefix && (
                     <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 select-none z-10">
