@@ -49,7 +49,7 @@ const socialLinksRootUrls: Record<string, string> = {
 };
 
 
-export const Route = createFileRoute('/p/$handle')({
+export const Route = createFileRoute('/l/$handle')({
     component: RouteComponent,
     loader: (ctx) => fetchInitialData({ data: { handle: ctx.params.handle } }),
 })

@@ -27,7 +27,7 @@ const uploadProfileImage = createServerFn({ method: 'POST' })
     }).handler(async (ctx) => {
         const appSession = await useAppSession();
         if (!appSession.data?.user) {
-            throw redirect({ to: '/Login', replace: true });
+            throw redirect({ to: '/auth/login', replace: true });
         }
 
         const uploadUrl = `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/images/v1`;
@@ -110,6 +110,16 @@ const uploadProfileImage = createServerFn({ method: 'POST' })
         const db = dbClient();
         await db.delete(profileImagesTable).where(eq(profileImagesTable.userId, appSession.data.user.id));
         await db.insert(profileImagesTable).values(insertData);
+
+        await appSession.update({
+            user: {
+                ...appSession.data.user,
+            },
+            userProfile: {
+                ...appSession.data.userProfile,
+                profilePicture: imageVariants.original || undefined
+            }
+        });
 
         return {
             status: 'SUCCESS', data: imageVariants

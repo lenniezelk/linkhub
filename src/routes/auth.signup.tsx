@@ -11,8 +11,8 @@ import Footer from '@/components/Footer';
 import InPageNotifications, { useInPageNotifications } from '@/components/InPageNotifications';
 import Input from '@/components/Input';
 import Menu from '@/components/Menu';
-import { GoogleAuthData, InAppTheme, type SignupData, SignupFormData } from '@/lib/types';
-import { isConfirmPasswordValid, isEmailValid, isHandleValid, isNameValid, isPasswordValid, validateEmail, validateHandle, validatePassword } from '@/lib/validation';
+import { GoogleAuthData, InAppTheme, type SignupData, CreateUserData } from '@/lib/types';
+import { isConfirmPasswordValid, isEmailValid, isHandleValid, isNameValid, isPasswordValid } from '@/lib/validation';
 // import { signUp, signUpGoogle } from '@/server/auth';
 import { useAppSession } from '@/lib/useAppSession';
 import { hashPassword } from '@/lib/auth';
@@ -26,7 +26,7 @@ const signupSearchSchema = z.object({
     handle: z.string().optional(),
 });
 
-export const Route = createFileRoute('/Signup')({
+export const Route = createFileRoute('/auth/signup')({
     head: () => ({
         meta: [
             {
@@ -81,7 +81,7 @@ const reducer = (state: SignupForm, action: SignupFormReducerActions): SignupFor
 
 
 
-export const signUp = createServerFn({ method: 'POST' }).validator(SignupFormData).handler(async (ctx) => {
+export const signUp = createServerFn({ method: 'POST' }).validator(CreateUserData).handler(async (ctx) => {
     const db = dbClient();
     const userData = ctx.data;
 
@@ -267,7 +267,7 @@ function RouteComponent() {
         signUpGoogle({ data: userInfo }).then((result) => {
             if (result.status === 'SUCCESS') {
                 inPageNotifications.addNotification({ type: 'success', message: 'Account created successfully! Redirecting...', keepForever: true });
-                navigate({ to: '/app/createHandle', replace: true });
+                navigate({ to: '/app/create-handle', replace: true });
             } else {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during signup. Please try again.', keepForever: true });
             }

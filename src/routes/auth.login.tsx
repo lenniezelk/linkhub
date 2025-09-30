@@ -19,7 +19,7 @@ import { dbClient } from '@/lib/db/dbClient';
 import { createServerFn } from '@tanstack/react-start';
 
 
-export const Route = createFileRoute('/Login')({
+export const Route = createFileRoute('/auth/login')({
     head: () => ({
         meta: [
             {
@@ -252,7 +252,7 @@ function RouteComponent() {
         loginGoogle({ data: userInfo }).then((result) => {
             if (result.status === 'SUCCESS') {
                 inPageNotifications.addNotification({ type: 'success', message: 'Login successful! Redirecting...', keepForever: true });
-                navigate({ to: '/app/createHandle', replace: true });
+                navigate({ to: '/app/create-handle', replace: true });
             } else {
                 inPageNotifications.addNotification({ type: 'error', message: result.error || 'An error occurred during Google login. Please try again.', keepForever: true });
             }

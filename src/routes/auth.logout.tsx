@@ -6,7 +6,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { useEffect } from 'react';
 
 
-export const Route = createFileRoute('/Logout')({
+export const Route = createFileRoute('/auth/logout')({
     component: RouteComponent,
 })
 

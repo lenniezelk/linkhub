@@ -3,7 +3,7 @@ import Container from '@/components/Container'
 import Button from '@/components/Button'
 import Menu from '@/components/Menu'
 
-export const Route = createFileRoute('/Pricing')({
+export const Route = createFileRoute('/pricing')({
   component: RouteComponent,
 })
 

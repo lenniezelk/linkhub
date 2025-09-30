@@ -17,11 +17,18 @@ export interface User {
     emailVerified: boolean | null;
 }
 
-export const SignupFormData = z.object({
+export const CreateUserData = z.object({
     handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
     email: z.string().email(),
     password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]/),
     name: z.string().min(3).max(100),
+});
+
+export const UpdateUserData = z.object({
+    handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/).optional(),
+    email: z.string().email().optional(),
+    password: z.string().min(8).regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]/).optional(),
+    name: z.string().min(3).max(100).optional(),
 });
 
 export const LoginFormData = z.object({
@@ -35,7 +42,7 @@ export const GoogleAuthData = z.object({
     emailVerified: z.boolean().optional(),
 });
 
-export type SignupData = z.infer<typeof SignupFormData>;
+export type SignupData = z.infer<typeof CreateUserData>;
 export type GoogleAuthData = z.infer<typeof GoogleAuthData>;
 
 export type LoginData = z.infer<typeof LoginFormData>;

@@ -61,7 +61,7 @@ function Menu({ context }: MenuProps) {
                     <NavigationMenuItem>
                         <NavigationMenuLink asChild className="text-lg font-medium text-slate-800 hover:text-slate-950 hover:bg-transparent px-3 py-2">
                             <Link
-                                to="/Pricing"
+                                to="/pricing"
 
                             >
                                 Pricing
@@ -73,7 +73,7 @@ function Menu({ context }: MenuProps) {
                         <NavigationMenuItem>
                             <NavigationMenuLink asChild className="text-lg font-medium text-slate-800 hover:text-slate-950 hover:bg-transparent px-3 py-2">
                                 <Link
-                                    to="/Login"
+                                    to="/auth/login"
                                 >
                                     Login
                                 </Link>
@@ -88,7 +88,7 @@ function Menu({ context }: MenuProps) {
                                 "transition-colors"
                             )}>
                                 <Link
-                                    to="/Signup"
+                                    to="/auth/signup"
                                 >
                                     Sign Up
                                 </Link>
@@ -122,15 +122,15 @@ function Menu({ context }: MenuProps) {
                                 <div className="flex flex-col gap-2 p-2">
                                     <NavigationMenuLink asChild className="text-lg font-medium text-slate-800 hover:text-white hover:bg-slate-900 px-3 py-2 rounded-md transition-colors">
                                         <Link
-                                            to="/app/Profile"
+                                            to="/app/account"
 
                                         >
-                                            Profile
+                                            Account
                                         </Link>
                                     </NavigationMenuLink>
                                     <NavigationMenuLink asChild className="text-lg font-medium text-slate-800 hover:text-white hover:bg-slate-900 px-3 py-2 rounded-md transition-colors">
                                         <Link
-                                            to="/Logout"
+                                            to="/auth/logout"
 
                                         >
                                             Logout
@@ -150,7 +150,7 @@ function Menu({ context }: MenuProps) {
             )}>
                 <div className="flex flex-col p-4 gap-2">
                     <Link
-                        to="/Pricing"
+                        to="/pricing"
                         className="text-lg font-medium text-slate-800 hover:text-slate-950 hover:bg-slate-100 px-3 py-2 rounded-md transition-colors"
                         onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -160,14 +160,14 @@ function Menu({ context }: MenuProps) {
                     {!user && (
                         <>
                             <Link
-                                to="/Login"
+                                to="/auth/login"
                                 className="text-lg font-medium text-slate-800 hover:text-slate-950 hover:bg-slate-100 px-3 py-2 rounded-md transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 Login
                             </Link>
                             <Link
-                                to="/Signup"
+                                to="/auth/signup"
                                 className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-base font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
@@ -195,14 +195,14 @@ function Menu({ context }: MenuProps) {
                                 <span className="text-slate-800 font-medium">Profile</span>
                             </div>
                             <Link
-                                to="/app/Profile"
+                                to="/app/account"
                                 className="text-lg font-medium text-slate-800 hover:text-white hover:bg-slate-900 px-3 py-2 rounded-md transition-colors ml-4"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 Edit Profile
                             </Link>
                             <Link
-                                to="/Logout"
+                                to="/auth/logout"
                                 className="text-lg font-medium text-slate-800 hover:text-white hover:bg-slate-900 px-3 py-2 rounded-md transition-colors ml-4"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >

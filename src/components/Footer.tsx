@@ -11,7 +11,7 @@ function Footer() {
                     <span className="text-sm text-slate-700">© {new Date().getFullYear()} LinkHub</span>
                 </div>
                 <nav className="flex items-center gap-4">
-                    <Link to="/Pricing" className="text-sm font-medium text-slate-800 hover:text-slate-950">Pricing</Link>
+                    <Link to="/pricing" className="text-sm font-medium text-slate-800 hover:text-slate-950">Pricing</Link>
                 </nav>
             </div>
         </footer>

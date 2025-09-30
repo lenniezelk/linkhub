@@ -15,7 +15,7 @@ import InPageNotifications, { useInPageNotifications } from '@/components/InPage
 import Footer from '@/components/Footer'
 
 
-export const Route = createFileRoute('/app/createHandle')({
+export const Route = createFileRoute('/app/create-handle')({
   component: RouteComponent,
   beforeLoad: async ({ context }) => {
     if (context.user?.handle) {
@@ -32,7 +32,7 @@ const saveHandle = createServerFn({ method: 'POST' }).validator(HandleFormData).
 
   const appSession = await useAppSession();
   if (!appSession.data?.user) {
-    throw redirect({ to: '/Login', replace: true });
+    throw redirect({ to: '/auth/login', replace: true });
   }
 
   console.log('Saving handle:', handleData, appSession.data); // --- IGNORE ---
@@ -93,7 +93,7 @@ function RouteComponent() {
   }, [handle])
 
   return <Container>
-    <Menu user={routeContext.user} />
+    <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
     <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
       <InPageNotifications />
       <h1 className="text-2xl font-bold mb-4 text-slate-900">Create Your Handle/Username</h1>

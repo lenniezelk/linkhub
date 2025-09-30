@@ -38,10 +38,10 @@ export const Route = createFileRoute('/app/')({
     component: RouteComponent,
     beforeLoad: async ({ context }) => {
         if (!context.user) {
-            throw redirect({ to: '/Login' });
+            throw redirect({ to: '/auth/login' });
         }
         if (context.user && !context.user.handle) {
-            throw redirect({ to: '/app/createHandle' });
+            throw redirect({ to: '/app/create-handle' });
         }
     },
     loader: () => fetchInitialData(),
@@ -52,7 +52,7 @@ const saveLinks = createServerFn({ method: 'POST' }).validator(linksData).handle
 
     const appSession = await useAppSession();
     if (!appSession.data?.user) {
-        throw redirect({ to: '/Login', replace: true });
+        throw redirect({ to: '/auth/login', replace: true });
     }
 
     const filteredLinksData = Object.keys(ctx.data).filter(key => !key.endsWith('Error')).reduce((obj, key) => {
@@ -94,7 +94,7 @@ const fetchInitialData = createServerFn({ method: 'GET' }).handler(async () => {
 
     const appSession = await useAppSession();
     if (!appSession.data?.user) {
-        throw redirect({ to: '/Login', replace: true });
+        throw redirect({ to: '/auth/login', replace: true });
     }
 
     const links = await db.select().from(linksTable).where(eq(linksTable.userId, appSession.data.user.id));
@@ -131,7 +131,7 @@ const updateSelectedTheme = createServerFn({ method: 'POST' }).validator(z.objec
 })).handler(async (ctx) => {
     const appSession = await useAppSession();
     if (!appSession.data?.user) {
-        throw redirect({ to: '/Login', replace: true });
+        throw redirect({ to: '/auth/login', replace: true });
     }
 
     const { themeId } = ctx.data;
@@ -225,8 +225,6 @@ const validateFields = (data: DashboardData): Partial<LinksErrors> => {
     }
     return errors;
 };
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const DEFAULT_THEME_CLASS = 'bg-gradient-to-br from-rose-200 via-fuchsia-200 to-sky-200';
 
@@ -350,6 +348,7 @@ function RouteComponent() {
         <Container gradientClass={getCurrentTheme()}>
             <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
             <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
+                <h1 className="text-3xl font-bold">Update Your Public Profile</h1>
                 <InPageNotifications />
                 <div className='mt-4 flex justify-end w-full max-w-md px-4'>
                     <Tooltip>
