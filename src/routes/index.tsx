@@ -5,7 +5,7 @@ import Footer from '@/components/Footer'
 import HeroSection1 from '@/components/HeroSection1'
 import HeroSection2 from '@/components/HeroSection2'
 import Features from '@/components/Features'
-// import TestimonialsSection from '@/components/TestimonialsSection'
+import TestimonialsSection from '@/components/TestimonialsSection'
 
 export const Route = createFileRoute('/')({
     head: () => ({
@@ -36,7 +36,7 @@ function RouteComponent() {
             <Features />
 
             {/* Testimonials section */}
-            {/* <TestimonialsSection /> */}
+            <TestimonialsSection />
 
             {/* Footer */}
             <Footer />
