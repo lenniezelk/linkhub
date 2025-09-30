@@ -1,26 +1,47 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Connect from "./Connect";
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(ScrollTrigger)
+
+gsap.registerPlugin(ScrollTrigger, useGSAP)
 
 function HeroSection1() {
     const [handle, setHandle] = useState('')
+    const fadeInRef = useRef<HTMLDivElement | null>(null);
 
+    useGSAP(() => {
+        gsap.fromTo(fadeInRef.current, {
+            opacity: 0,
+            y: 30
+        }, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+                trigger: fadeInRef.current,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+            }
+        });
+    }, { scope: fadeInRef });
 
     return (
         <section className="mt-12 grid min-h-[calc(100vh-6rem)] grid-cols-1 content-center gap-8 md:grid-cols-2 md:items-center">
             {/* Left: copy + input */}
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                    The only link you'll ever need.
-                </h1>
-                <p className="mt-3 text-base leading-7 text-slate-700">
-                    Connect your audience to all your content with one simple link. Perfect for your
-                    social media bio.
-                </p>
+                <div ref={fadeInRef} className="opacity-0">
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                        The only link you'll ever need.
+                    </h1>
+                    <p className="mt-3 text-base leading-7 text-slate-700">
+                        Connect your audience to all your content with one simple link. Perfect for your
+                        social media bio.
+                    </p>
+                </div>
 
                 <form className="mt-6" onSubmit={(e) => e.preventDefault()}>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
