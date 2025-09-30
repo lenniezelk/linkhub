@@ -353,7 +353,7 @@ function RouteComponent() {
                 <div className='mt-4 flex justify-end w-full max-w-md px-4'>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <a href={`${state.rootUrl}/p/${routeContext.user?.handle}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors">
+                            <a href={`${state.rootUrl}/l/${routeContext.user?.handle}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors">
                                 <ExternalLink className='text-slate-700 h-5 w-5' />
                             </a>
                         </TooltipTrigger>

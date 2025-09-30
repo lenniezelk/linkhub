@@ -75,6 +75,6 @@
     "vite": "^6.3.5",
     "vitest": "^3.0.5",
     "web-vitals": "^4.2.4",
-    "wrangler": "^4.38.0"
+    "wrangler": "^4.40.3"
   }
 }

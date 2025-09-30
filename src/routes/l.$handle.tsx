@@ -134,7 +134,7 @@ function RouteComponent() {
 
     const linksWithUrls = useMemo(() => linksOnlyValues.filter(linkType => localData.linksData[linkType]), [localData.linksData]);
     const shareTitle = useMemo(() => "View my latest content on LinkHub!", []);
-    const handleLink = useMemo(() => `${localData.rootUrl}/p/${routeContext.user?.handle}`, [localData.rootUrl, routeContext.user?.handle]);
+    const handleLink = useMemo(() => `${localData.rootUrl}/l/${routeContext.user?.handle}`, [localData.rootUrl, routeContext.user?.handle]);
 
     const shareButtonCommonProps = useMemo(() => ({
         url: handleLink,
@@ -172,7 +172,7 @@ function RouteComponent() {
                 </div>
                 <div className='flex flex-col items-center px-4 mt-6'>
                     <div className="w-[200px] h-[200px]">
-                        <ProfileImage imageUrl={localData.profileImage.imageUrl} />
+                        <ProfileImage imageUrl={localData.profileImage?.imageUrl || ''} />
                     </div>
                 </div>
                 {linksWithUrls.length > 0 ? (
