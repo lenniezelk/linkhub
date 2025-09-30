@@ -1,11 +1,54 @@
 import AllLinks from "./AllLinks";
 import { EasySharing } from "./EasySharing";
 import { Telemetry } from "./Telemetry";
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useGSAP } from '@gsap/react';
+import { useRef } from "react";
+
+gsap.registerPlugin(ScrollTrigger, useGSAP)
+
 
 function Features() {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const titleContainerRef = useRef<HTMLDivElement | null>(null);
+
+    useGSAP(() => {
+        gsap.fromTo(titleContainerRef.current, {
+            opacity: 0,
+            y: 30
+        }, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+                trigger: titleContainerRef.current,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        gsap.fromTo(".feature-text", {
+            opacity: 0,
+            y: 30
+        }, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            stagger: 0.2,
+            scrollTrigger: {
+                trigger: ".feature-text",
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+            }
+        });
+    }, { scope: containerRef });
+
     return (
-        <section className="mt-20 pb-20">
-            <div className="text-center">
+        <section className="mt-20 pb-20" ref={containerRef}>
+            <div className="text-center" ref={titleContainerRef}>
                 <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                     Features
                 </h2>
@@ -17,10 +60,12 @@ function Features() {
             <div className="mt-10 grid grid-cols-1 gap-12 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
                 {/* Feature 1 */}
                 <div className="flex flex-col items-center text-center">
-                    <h3 className="mb-4 text-lg font-semibold text-slate-900">All your links</h3>
-                    <p className="mb-4 text-sm text-slate-700 max-w-sm">
-                        Collect links to content, products, and profiles in one place.
-                    </p>
+                    <div className="opacity-0 feature-text" >
+                        <h3 className="mb-4 text-lg font-semibold text-slate-900">All your links</h3>
+                        <p className="mb-4 text-sm text-slate-700 max-w-sm">
+                            Collect links to content, products, and profiles in one place.
+                        </p>
+                    </div>
                     <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                         <div className="aspect-[16/12] w-full">
                             <AllLinks />
@@ -30,10 +75,12 @@ function Features() {
 
                 {/* Feature 2 */}
                 <div className="flex flex-col items-center text-center">
-                    <h3 className="mb-4 text-lg font-semibold text-slate-900">Telemetry & graphs</h3>
-                    <p className="mb-4 text-sm text-slate-700 max-w-sm">
-                        Track clicks and engagement with real‑time charts and insights.
-                    </p>
+                    <div className="opacity-0 feature-text" >
+                        <h3 className="mb-4 text-lg font-semibold text-slate-900">Telemetry & graphs</h3>
+                        <p className="mb-4 text-sm text-slate-700 max-w-sm">
+                            Track clicks and engagement with real‑time charts and insights.
+                        </p>
+                    </div>
                     <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                         <div className="aspect-[16/12] w-full">
                             <Telemetry />
@@ -43,10 +90,12 @@ function Features() {
 
                 {/* Feature 3 */}
                 <div className="flex flex-col items-center text-center">
-                    <h3 className="mb-4 text-lg font-semibold text-slate-900">Easy sharing</h3>
-                    <p className="mb-4 text-sm text-slate-700 max-w-sm">
-                        Share your link anywhere—bio, posts, videos, and more.
-                    </p>
+                    <div className="opacity-0 feature-text" >
+                        <h3 className="mb-4 text-lg font-semibold text-slate-900">Easy sharing</h3>
+                        <p className="mb-4 text-sm text-slate-700 max-w-sm">
+                            Share your link anywhere—bio, posts, videos, and more.
+                        </p>
+                    </div>
                     <div className="relative w-full border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                         <div className="aspect-[16/12] w-full">
                             <EasySharing />
