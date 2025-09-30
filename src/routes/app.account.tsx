@@ -162,6 +162,7 @@ function RouteComponent() {
   const submitProfileImage = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+
     const formData = new FormData(e.currentTarget);
     const file = formData.get('fileUpload') as File | null;
 
