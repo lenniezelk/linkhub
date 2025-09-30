@@ -3,7 +3,6 @@ import LinkHubRiveFile from '../assets/linkhub.riv'
 import { useEffect, useRef, useState } from 'react'
 import * as RiveReactCanvas from '@rive-app/react-canvas';
 import type { FetchState } from '@/lib/types';
-import { wait } from '@/lib/utils';
 const { decodeImage, useViewModel, useViewModelInstance, useViewModelInstanceEnum, useViewModelInstanceList, useViewModelInstanceNumber, useViewModelInstanceTrigger, useRive } = RiveReactCanvas;
 
 interface Testimonial {
@@ -53,7 +52,6 @@ const TestimonialsData: TestimonialsData = {
 }
 
 const loadData = async (): Promise<TestimonialsData> => {
-    await wait(500) // Simulate loading
     return TestimonialsData
 }
 
