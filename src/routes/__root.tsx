@@ -6,6 +6,20 @@ import { useAppSession } from '@/lib/useAppSession';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { InPageNotificationsProvider } from '@/components/InPageNotifications';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { onLCP, onINP, onCLS } from 'web-vitals/attribution';
+import type { CLSMetricWithAttribution, INPMetricWithAttribution, LCPMetricWithAttribution } from 'web-vitals/attribution';
+
+// Type for Web Vitals metrics
+type WebVitalMetric = CLSMetricWithAttribution | INPMetricWithAttribution | LCPMetricWithAttribution;
+import { useEffect } from 'react';
+
+// Extend Window interface for gtag
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+    dataLayer: any[];
+  }
+}
 
 
 // Devtools are dynamically imported only in development to avoid production build issues
@@ -62,6 +76,20 @@ export const Route = createRootRoute({
         href: logoSvg,
       },
     ],
+    scripts: [
+      {
+        src: `https://www.googletagmanager.com/gtag/js?id=${process.env.GTAG}`,
+        async: true,
+      },
+      {
+        children: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${process.env.GTAG}');
+        `,
+      },
+    ],
   }),
 
   shellComponent: RootComponent,
@@ -82,6 +110,36 @@ export const Route = createRootRoute({
   notFoundComponent: () => <div>404 - Not Found</div>,
 })
 
+function sendToGoogleAnalytics(metric: WebVitalMetric) {
+  const { name, delta, value, id, attribution } = metric;
+
+  const eventParams: Record<string, any> = {
+    // Built-in params:
+    value: delta, // Use `delta` so the value can be summed.
+    // Custom params:
+    metric_id: id, // Needed to aggregate events.
+    metric_value: value, // Optional.
+    metric_delta: delta, // Optional.
+  };
+
+  switch (name) {
+    case 'CLS':
+      eventParams.debug_target = (attribution as any)?.largestShiftTarget;
+      break;
+    case 'INP':
+      eventParams.debug_target = (attribution as any)?.interactionTarget;
+      break;
+    case 'LCP':
+      eventParams.debug_target = (attribution as any)?.element;
+      break;
+  }
+
+  // Use the global gtag function if available
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', name, eventParams);
+  }
+}
+
 function RootComponent() {
   return (
     <GoogleOAuthProvider clientId="659954519046-7f8jlgvqi1q6mqlgpgc92g2e8tca1tu1.apps.googleusercontent.com">
@@ -97,6 +155,13 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    // Track Core Web Vitals and send to Google Analytics
+    onCLS(sendToGoogleAnalytics);
+    onLCP(sendToGoogleAnalytics);
+    onINP(sendToGoogleAnalytics);
+  }, []);
+
   return (
     <html lang="en">
       <head>
