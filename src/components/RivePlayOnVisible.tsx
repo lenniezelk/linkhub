@@ -28,17 +28,19 @@ function RivePlayOnVisible({ artboardName, viewModelName, switchName = 'playing'
     useEffect(() => {
         if (!viewModelInstance || !containerRef.current) return
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const entry = entries[0]
-                const isVisible = !!entry?.isIntersecting
-                setPlaying(isVisible)
-            },
-            { threshold: 0.2 }
-        )
+        setPlaying(true)
 
-        observer.observe(containerRef.current)
-        return () => observer.disconnect()
+        // const observer = new IntersectionObserver(
+        //     (entries) => {
+        //         const entry = entries[0]
+        //         const isVisible = !!entry?.isIntersecting
+        //         setPlaying(isVisible)
+        //     },
+        //     { threshold: 0.2 }
+        // )
+
+        // observer.observe(containerRef.current)
+        // return () => observer.disconnect()
     }, [viewModelInstance, setPlaying])
 
     return (
