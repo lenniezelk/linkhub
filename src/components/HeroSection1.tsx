@@ -30,7 +30,7 @@ function HeroSection1() {
     }, { scope: fadeInRef });
 
     return (
-        <section className="mt-12 grid min-h-[calc(100vh-6rem)] grid-cols-1 content-center gap-8 md:grid-cols-2 md:items-center">
+        <section className="mt-16 py-12 grid grid-cols-1 content-center gap-8 md:grid-cols-2 md:items-center">
             {/* Left: copy + input */}
             <div>
                 <div ref={fadeInRef} className="opacity-0">

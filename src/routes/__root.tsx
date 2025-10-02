@@ -142,7 +142,7 @@ function sendToGoogleAnalytics(metric: WebVitalMetric) {
 
 function RootComponent() {
   return (
-    <GoogleOAuthProvider clientId="659954519046-7f8jlgvqi1q6mqlgpgc92g2e8tca1tu1.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={`${process.env.GOOGLE_OAUTH_CLIENT_ID}`}>
       <InPageNotificationsProvider>
         <TooltipProvider>
           <RootDocument>
