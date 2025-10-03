@@ -8,6 +8,7 @@ import { InPageNotificationsProvider } from '@/components/InPageNotifications';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { onLCP, onINP, onCLS } from 'web-vitals/attribution';
 import type { CLSMetricWithAttribution, INPMetricWithAttribution, LCPMetricWithAttribution } from 'web-vitals/attribution';
+import { getBindings } from '@/lib/cf_bindings';
 
 // Type for Web Vitals metrics
 type WebVitalMetric = CLSMetricWithAttribution | INPMetricWithAttribution | LCPMetricWithAttribution;
@@ -51,6 +52,14 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async () => {
   return { status: 'SUCCESS', data: { user: session.data.user, userProfile: session.data.userProfile } };
 });
 
+export const getEnvVars = createServerFn({ method: 'GET' }).handler(async () => {
+  const env = getBindings();
+  return {
+    GOOGLE_OAUTH_CLIENT_ID: env.GOOGLE_OAUTH_CLIENT_ID,
+    GTAG: env.GTAG,
+  };
+});
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -76,9 +85,9 @@ export const Route = createRootRoute({
         href: logoSvg,
       },
     ],
-    scripts: [
+    scripts: import.meta.env.SSR ? [] : [
       {
-        src: `https://www.googletagmanager.com/gtag/js?id=${process.env.GTAG}`,
+        src: `https://www.googletagmanager.com/gtag/js?id=${(globalThis as any).__envVars?.GTAG || ''}`,
         async: true,
       },
       {
@@ -86,7 +95,7 @@ export const Route = createRootRoute({
           window.dataLayer = window.dataLayer || [];
           function gtag(){window.dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${process.env.GTAG}');
+          gtag('config', '${(globalThis as any).__envVars?.GTAG || ''}');
         `,
       },
     ],
@@ -95,16 +104,19 @@ export const Route = createRootRoute({
   shellComponent: RootComponent,
   beforeLoad: async () => {
     const result = await fetchMe();
+    const envVars = await getEnvVars();
 
     if (result.status === 'ERROR') {
       return {
         user: null,
+        envVars,
       }
     }
 
     return {
       user: result.data.user,
       userProfile: result.data.userProfile,
+      envVars,
     }
   },
   notFoundComponent: () => <div>404 - Not Found</div>,
@@ -141,8 +153,13 @@ function sendToGoogleAnalytics(metric: WebVitalMetric) {
 }
 
 function RootComponent() {
+  const context = Route.useRouteContext();
+  const googleClientId = context.envVars?.GOOGLE_OAUTH_CLIENT_ID || '';
+
+  console.log('Google OAuth Client ID from context:', googleClientId);
+
   return (
-    <GoogleOAuthProvider clientId={`${process.env.GOOGLE_OAUTH_CLIENT_ID}`}>
+    <GoogleOAuthProvider clientId={googleClientId}>
       <InPageNotificationsProvider>
         <TooltipProvider>
           <RootDocument>
