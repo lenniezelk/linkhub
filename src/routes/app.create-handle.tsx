@@ -96,15 +96,15 @@ function RouteComponent() {
     <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
     <main className="flex flex-col items-center mt-12 min-h-[calc(100vh-12rem)]">
       <InPageNotifications />
-      <h1 className="text-2xl font-bold mb-4 text-slate-900">Create Your Handle/Username</h1>
-      <p className="mb-4 text-slate-900">Choose a unique handle/username for your account. This will be used to identify you on the platform.</p>
+      <h1 className="text-2xl font-bold mb-4 text-slate-900">Create Your Handle or Username</h1>
+      <p className="mb-4 text-slate-900">Choose a unique handle or username for your account. This will be used to identify you on the platform.</p>
       <form className="max-w-md w-full" noValidate onSubmit={submit}>
         <div>
           <Input
             type="text"
             id="handle"
             name="handle"
-            placeholder="Enter your handle/username"
+            placeholder="Enter your handle or username"
             value={handle}
             onChange={(e) => {
               setHandle(e.target.value)
