@@ -156,8 +156,6 @@ function RootComponent() {
   const context = Route.useRouteContext();
   const googleClientId = context.envVars?.GOOGLE_OAUTH_CLIENT_ID || '';
 
-  console.log('Google OAuth Client ID from context:', googleClientId);
-
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <InPageNotificationsProvider>
