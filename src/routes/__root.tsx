@@ -73,6 +73,10 @@ export const Route = createRootRoute({
       {
         title: 'LinkHub | Home',
       },
+      {
+        name: 'description',
+        "content": "LinkHub is a powerful link management solution that helps you simplify, organize, and share your links with ease. With LinkHub, you can create custom short links, track link performance, and manage your links all in one place.",
+      }
     ],
     links: [
       {
