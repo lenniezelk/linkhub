@@ -27,6 +27,15 @@ function RouteComponent() {
             {/* Top navigation */}
             <Menu context={{ user: routeContext.user, userProfile: routeContext.userProfile }} />
 
+            <section className='mt-16 text-center'>
+                <h1 className='text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl'>
+                    LinkHub: Your Ultimate Link Management Solution
+                </h1>
+                <p className='mt-6 text-lg text-slate-900 sm:text-xl lg:text-2xl'>
+                    Simplify, organize, and share your links with ease using LinkHub&apos;s powerful features.
+                </p>
+            </section>
+
             <section className='mt-16 py-12'>
                 <div className="relative border-2 border-white/70 bg-white/40 shadow-sm ring-1 ring-white/50 backdrop-blur">
                     <div className="aspect-[16/9] w-full">
